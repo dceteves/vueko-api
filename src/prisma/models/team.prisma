@@ -1,0 +1,16 @@
+model Team {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  isRegistered Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  // Relationship to Captain 
+  captainId String @unique
+  captain   User   @relation("TeamCaptain", fields: [captainId], references: [id], onDelete: Restrict)
+
+  // Relationship to Members 
+  members User[] @relation("TeamMembers")
+
+  // Relationship to Invitations 
+  invitations Invitation[]
+}

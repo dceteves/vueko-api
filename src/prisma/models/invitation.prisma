@@ -1,0 +1,26 @@
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  REVOKED
+}
+
+model Invitation {
+  id        String           @id @default(cuid())
+  status    InvitationStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  // Relationship to Team 
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Relationship to Sender 
+  senderId String
+  sender   User   @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Relationship to Recipient
+  recipientId String
+  recipient   User   @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, recipientId])
+}

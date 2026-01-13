@@ -1,0 +1,41 @@
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // osu! identity
+  osuId       String? @unique
+  osuUsername String?
+  osuAvatar   String?
+  countryCode String?
+
+  // OAuth tokens 
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+
+  // Stats 
+  osuRank Int?
+  badges  Int?
+
+  // Preferred timezone
+  timezone Int?
+
+  // reg metadata
+  registeredAt  DateTime  @default(now())
+  dataFetchedAt DateTime?
+
+  // Discord identity
+  discordId       String? @unique
+  discordUsername String?
+
+  // Relationship to Team
+  teamId String?
+  team   Team?   @relation("TeamMembers", fields: [teamId], references: [id])
+
+  // Relationship to Team, Captain Status
+  captainedTeam Team? @relation("TeamCaptain")
+
+  // Relationship to Invitations
+  sentInvites     Invitation[] @relation("Sender")
+  receivedInvites Invitation[] @relation("Recipient")
+}
