@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
+    "test": "jest",
     "start": "node index.ts",
     "dev": "nodemon index.ts"
   },
@@ -39,6 +40,7 @@
     "@types/passport-oauth2": "^1.8.0",
     "eslint": "^9.39.2",
     "globals": "^16.5.0",
+    "jest": "^30.3.0",
     "jiti": "^2.6.1",
     "nodemon": "^3.1.11",
     "prisma": "^6.19.2",
