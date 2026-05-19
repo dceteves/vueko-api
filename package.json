@@ -13,8 +13,8 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@tailwindcss/language-server": "^0.14.29",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
@@ -25,7 +25,8 @@
     "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-oauth2": "^1.8.0",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -43,12 +44,10 @@
     "jest": "^30.3.0",
     "jiti": "^2.6.1",
     "nodemon": "^3.1.11",
-    "prisma": "^6.19.2",
+    "prisma": "^7.8.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.22.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1"
-  },
-  "prisma": {
-    "schema": "./prisma/models/schema.prisma"
   }
 }
