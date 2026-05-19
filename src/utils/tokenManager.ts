@@ -1,16 +1,19 @@
-import prisma from '../prisma';
+import { prisma } from "../lib/prisma";
+import type { UserModel } from "../generated/prisma/models";
 
 export default class TokenManager {
-  async getValidAccessToken(userId) {
+  async getValidAccessToken(userId: string) {
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
-    if (!user || !user.accessToken) {
-      throw new Error('No OAuth account found');
+    if (!user || !user.accessToken || !user.tokenExpiresAt) {
+      throw new Error("No OAuth account found");
     }
 
-    const isExpired = user.tokenExpiresAt < new Date(Date.now() + 5 * 60 * 1000);
+    const isExpired =
+      user.tokenExpiresAt < new Date(Date.now() + 5 * 60 * 1000);
+
     if (isExpired) {
       return user.accessToken;
     }
@@ -18,21 +21,21 @@ export default class TokenManager {
     return await this.refreshUserToken(user);
   }
 
-  async refreshUserToken(user) {
+  async refreshUserToken(user: UserModel) {
     try {
       console.log(`Refreshing token for ${user.osuUsername}`);
 
-      const response = await fetch('https://osu.ppy.sh/oauth/token', {
-        method: 'POST',
+      const response = await fetch("https://osu.ppy.sh/oauth/token", {
+        method: "POST",
         headers: {
-          'Content-Type': 'applicaation/json',
+          "Content-Type": "applicaation/json",
         },
         body: JSON.stringify({
           client_id: process.env.OSU_ID,
           client_secret: process.env.OSU_SECRET,
-          grant_type: 'refresh_token',
+          grant_type: "refresh_token",
           refresh_token: user.refreshToken,
-        })
+        }),
       });
 
       if (!response.ok) {
@@ -45,24 +48,27 @@ export default class TokenManager {
         data: {
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
-          tokenExpiresAt: new Date(Date.now() + (tokens.expires_in * 1000)),
-        }
+          tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
+        },
       });
 
       console.log(`✅ Token refreshed for ${user.osuUsername}`);
       return tokens.access_token;
     } catch (error) {
-      console.error(`❌ Token refresh failed for ${user.osuUsername}:`, error.message);
+      console.error(
+        `Token refresh failed for ${user.osuUsername}:`,
+        (error as Error).message,
+      );
 
       await prisma.user.update({
         where: { id: user.id },
         data: {
           accessToken: null,
           refreshToken: null,
-          tokenExpiresAt: null
-        }
+          tokenExpiresAt: null,
+        },
       });
-      throw new Error('Token refresh failed - reauthentication required');
+      throw new Error("Token refresh failed - reauthentication required");
     }
   }
 
@@ -71,32 +77,28 @@ export default class TokenManager {
       where: {
         refreshToken: { not: null },
         tokenExpiresAt: {
-          lt: new Date(Date.now() + 5 * 60 * 1000)
-        }
-      }
+          lt: new Date(Date.now() + 5 * 60 * 1000),
+        },
+      },
     });
-    
+
     console.log(`Found ${expiredUsers.length} tokens needing refresh`);
 
-    const results = {
-      successful: 0,
-      failed: 0,
-      errors: []
-    };
+    let successful: number = 0;
+    const errors: { id: string; error: string }[] = [];
 
     for (const user of expiredUsers) {
       try {
         await this.refreshUserToken(user);
-        results.successful++;
-        await new Promise(resolve => setTimeout(resolve, 500));
+        successful += 1;
+        await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
-        results.failed++;
-        results.errors.push({
-          username: user.osuUsername,
-          error: error.message
+        errors.push({
+          id: user.id,
+          error: (error as Error).message,
         });
       }
     }
-    return results;
+    return { successful, errors };
   }
 }

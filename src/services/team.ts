@@ -1,3 +1,4 @@
+import type { TransactionClient } from "../generated/prisma/internal/prismaNamespace.ts";
 import { prisma } from "../lib/prisma.ts";
 
 /**
@@ -77,26 +78,23 @@ export async function deleteTeam(teamId: string): Promise<void> {
     where: { id: teamId },
     select: { members: { select: { id: true } } },
   });
+
   if (!team) {
     throw new Error("Team not found");
   }
 
-  // TODO:
-  try {
-    await prisma.$transaction(async (tx) => {
-      const memberPromises = team.members.map((member) =>
-        tx.user.update({
-          where: { id: member.id },
-          data: { teamId: null },
-          select: { id: true },
-        }),
-      );
-      await Promise.all([
-        ...memberPromises,
-        tx.team.delete({ where: { id: teamId } }),
-      ]);
+  await prisma.$transaction(async (tx: TransactionClient) => {
+    const memberPromises = team.members.map((member) => {
+      tx.user.update({
+        where: { id: member.id },
+        data: { teamId: null },
+        select: { id: true },
+      });
     });
-  } catch (err) {
-    throw err;
-  }
+
+    await Promise.all([
+      ...memberPromises,
+      tx.team.delete({ where: { id: teamId } }),
+    ]);
+  });
 }
