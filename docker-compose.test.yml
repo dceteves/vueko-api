@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: postgres:15
+    container_name: express-prisma-test-db
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+      POSTGRES_DB: bge_tests
+    ports:
+      - "5433:5432" # Use different port from dev to avoid conflicts
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+volumes:
+  postgres_test_data:
