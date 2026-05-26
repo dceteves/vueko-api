@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "test": "jest",
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest",
     "start": "node index.ts",
     "dev": "nodemon index.ts"
   },
@@ -15,7 +18,6 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "@tailwindcss/language-server": "^0.14.29",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -41,13 +43,14 @@
     "@types/passport-oauth2": "^1.8.0",
     "eslint": "^9.39.2",
     "globals": "^16.5.0",
-    "jest": "^30.3.0",
     "jiti": "^2.6.1",
     "nodemon": "^3.1.11",
     "prisma": "^7.8.0",
+    "prismock": "^1.35.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.22.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.1"
+    "typescript-eslint": "^8.50.1",
+    "vitest": "^4.1.7"
   }
 }
