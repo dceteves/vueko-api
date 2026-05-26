@@ -1,13 +1,13 @@
-import { Router } from 'express';
+import { Router } from "express";
 
-import TeamRequestHandler from '../../handlers/service/team.ts';
+import TeamRequestHandler from "../../handlers/service/team.ts";
 
-const router = Router();
+const teamServiceRouter = Router();
 
-router.post('/', TeamRequestHandler.createTeam);
-router.get('/', TeamRequestHandler.getTeams);
-router.get('/:teamId', TeamRequestHandler.getTeam);
-router.patch('/:teamId', TeamRequestHandler.changeTeamName);
-router.delete('/:teamId', TeamRequestHandler.deleteTeam);
+teamServiceRouter.post("/", TeamRequestHandler.createTeam);
+teamServiceRouter.get("/", TeamRequestHandler.getTeams);
+teamServiceRouter.get("/:teamId", TeamRequestHandler.getTeam);
+teamServiceRouter.patch("/:teamId", TeamRequestHandler.changeTeamName);
+teamServiceRouter.delete("/:teamId", TeamRequestHandler.deleteTeam);
 
-export default router;
+export default teamServiceRouter;

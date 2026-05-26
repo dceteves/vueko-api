@@ -1,14 +1,17 @@
-import passport from '../lib/passport.ts';
+import passport from "../lib/passport.ts";
 
-import type { NextFunction } from 'express';
-import type { ProviderRequest, ProviderResponse } from '../types/handler.types.ts';
+import type { NextFunction } from "express";
+import type {
+  ProviderRequest,
+  ProviderResponse,
+} from "../types/handler.types.ts";
 
 export const state = crypto.randomUUID();
 
 function handleProvider(
   req: ProviderRequest,
   res: ProviderResponse,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const { provider } = req.params;
   passport.authenticate(provider, { state })(req, res, next);
@@ -17,10 +20,12 @@ function handleProvider(
 function handleProviderCallback(
   req: ProviderRequest,
   res: ProviderResponse,
-  next: NextFunction
+  next: NextFunction,
 ) {
   if (req.query.state !== state) {
-    res.status(400).json({ message: 'State does not match with callback state' });
+    res
+      .status(400)
+      .json({ message: "State does not match with callback state" });
   } else {
     next();
   }

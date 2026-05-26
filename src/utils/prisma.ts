@@ -1,14 +1,13 @@
-import { isOsuProfile, isDiscordProfile } from '../types/passport.types.ts';
-
-import type { UserUpsertArgs } from '../generated/prisma/models';
+import { isOsuProfile, isDiscordProfile } from "types/passport.types.ts";
+import type { UserUpsertArgs } from "@generated/prisma/models.ts";
 
 /**
- * Helper function for findOrCreateUser
+ * Helper function for findOrCreateUserFromProfile
  */
 export function generateUserUpsertArgs<TProfile>(
   accessToken: string,
   refreshToken: string,
-  profile: TProfile
+  profile: TProfile,
 ): UserUpsertArgs | null {
   let where, data;
 

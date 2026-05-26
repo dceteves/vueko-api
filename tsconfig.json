@@ -1,24 +1,43 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "rootDir": "./src",
+    "module": "nodenext",
+    "moduleDetection": "force",
+    "moduleResolution": "nodenext",
+    "rootDir": ".",
+    "outDir": "./dist",
     "target": "ES2023",
     "strict": true,
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "verbatimModuleSyntax": true,
-    // "skipLibCheck": true,
+    "skipLibCheck": true,
     "typeRoots": [
-      "./src/types/",
+      "./src/types",
       "./node_modules/@types"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": { 
+      "app": [ "src/", "src/app.ts" ],
+      "@generated/*": [ "src/generated/*", "src/generated" ],
+      "@lib/*": [ "src/lib/*", "src/lib" ],
+      "@services/*": [ "src/services/*", "src/services" ],
+      "@handlers/*": [ "src/handlers/*", "src/handlers" ],
+      "@middleware/*": [ "src/middleware/*", "src/middleware" ],
+      "@routes/*": [ "src/routes/*", "src/routes" ],
+      "@utils/*": [ "src/utils/*", "src/utils" ],
+      "types/*": [ "src/types/*" ]
+    }
   },
   "include": [
-    "src/**/*"
+    "index.ts",
+    "src/**/*",
+    "test/**/*"  
   ],
-  "exclude": [
-    "node_modules"
+  "exclude": [ 
+    "node_modules",
+    "tests",
+    "scripts",
+    "test/**/*.ts"
   ]
 }

@@ -1,8 +1,8 @@
-import { prisma } from '../lib/prisma.ts';
-import { generateUserUpsertArgs } from '../utils/prisma.ts';
+import prisma from "../lib/prisma.ts";
+import { generateUserUpsertArgs } from "../utils/prisma.ts";
 
-import type { User } from '../generated/prisma/client.ts';
-import type { OsuProfile, DiscordProfile } from '../types/passport.types.ts';
+import type { User } from "../generated/prisma/client.ts";
+import type { OsuProfile, DiscordProfile } from "../types/passport.types.ts";
 
 /**
  * TODO:
@@ -13,14 +13,18 @@ import type { OsuProfile, DiscordProfile } from '../types/passport.types.ts';
  * @param profile - Object containing user info
  * @return user
  */
-async function findOrCreateUser<TProfile>(
+async function findOrCreateUserFromProfile<TProfile>(
   accessToken: string,
   refreshToken: string,
-  profile: TProfile
+  profile: TProfile,
 ): Promise<User> {
-  const args = generateUserUpsertArgs<TProfile>(accessToken, refreshToken, profile);
-  if (!args) { 
-    throw new Error("Could not generate query arguments from profile. Check if provider is supported");
+  const args = generateUserUpsertArgs<TProfile>(
+    accessToken,
+    refreshToken,
+    profile,
+  );
+  if (!args) {
+    throw new Error("Could not generate query arguments from profile");
   }
   return await prisma.user.upsert(args);
 }
@@ -31,19 +35,18 @@ async function findOrCreateUser<TProfile>(
  * @throws User not found Error
  * @param userId User ID
  */
-async function fetchUser(userId: string): Promise<User> {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    throw new Error('User not found');
-  }
-  return user;
+async function fetchUser(userId: string): Promise<User | null> {
+  return await prisma.user.findUnique({ where: { id: userId } });
 }
 
 /**
  * Attach Osu credentials to existing user
  * @async
  */
-async function linkOsuProfile(userId: string, profile: OsuProfile): Promise<User> {
+async function linkOsuProfile(
+  userId: string,
+  profile: OsuProfile,
+): Promise<User> {
   return await prisma.user.update({
     where: { id: userId },
     data: {
@@ -64,7 +67,10 @@ async function linkOsuProfile(userId: string, profile: OsuProfile): Promise<User
  * @param profile Discord profile (discordId and discordUsername)
  * @return user promise
  */
-async function linkDiscordProfile(userId: string, profile: DiscordProfile): Promise<User> {
+async function linkDiscordProfile(
+  userId: string,
+  profile: DiscordProfile,
+): Promise<User> {
   return await prisma.user.update({
     where: { id: userId },
     data: {
@@ -101,15 +107,17 @@ async function updateTimezone(userId: string, timezone: number): Promise<User> {
   }
   return await prisma.user.update({
     where: { id: userId },
-    data: { timezone }
+    data: { timezone },
   });
 }
 
-export default {
-  findOrCreateUser,
+const UserService = {
+  findOrCreateUserFromProfile,
   fetchUser,
   linkOsuProfile,
   linkDiscordProfile,
   dropDiscordCredentials,
   updateTimezone,
 };
+
+export default UserService;

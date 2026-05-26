@@ -1,12 +1,17 @@
-import { prisma } from '../lib/prisma.ts';
+import type { Invitation } from "../generated/prisma/client.ts";
+import type { TransactionClient } from "../generated/prisma/internal/prismaNamespace.ts";
+import prisma from "../lib/prisma.ts";
 
 /**
  * @param userId - id of the user
  * @param invitationId - id of the invitation
  * @return invitation object
  */
-export async function acceptInvitation(userId: string, invitationId: string) {
-  return await prisma.$transaction(async (tx) => {
+async function acceptInvitation(
+  userId: string,
+  invitationId: string,
+): Promise<Invitation> {
+  return await prisma.$transaction(async (tx: TransactionClient) => {
     const invitation = await tx.invitation.findUnique({
       where: { id: invitationId },
       select: {
@@ -19,9 +24,9 @@ export async function acceptInvitation(userId: string, invitationId: string) {
     if (
       !invitation ||
       invitation.recipientId !== userId ||
-      invitation.status !== 'PENDING'
+      invitation.status !== "PENDING"
     ) {
-      throw new Error('Invalid or expired invitation.');
+      throw new Error("Invalid or expired invitation.");
     }
 
     await tx.user.update({
@@ -31,16 +36,16 @@ export async function acceptInvitation(userId: string, invitationId: string) {
 
     const newInvitation = await tx.invitation.update({
       where: { id: invitationId },
-      data: { status: 'ACCEPTED' },
+      data: { status: "ACCEPTED" },
     });
 
     await tx.invitation.updateMany({
       where: {
         recipientId: userId,
-        status: 'PENDING',
+        status: "PENDING",
         id: { not: invitationId },
       },
-      data: { status: 'DECLINED' },
+      data: { status: "DECLINED" },
     });
 
     return newInvitation;
@@ -50,7 +55,7 @@ export async function acceptInvitation(userId: string, invitationId: string) {
 /**
  * Update invitation status to "declined"
  */
-export async function declineInvitation(invitationId: string) {
+async function declineInvitation(invitationId: string): Promise<Invitation> {
   const invitation = await prisma.invitation.findUnique({
     where: { id: invitationId },
     select: {
@@ -60,17 +65,17 @@ export async function declineInvitation(invitationId: string) {
   });
 
   if (!invitation) {
-    throw new Error('Invitation not found');
+    throw new Error("Invitation not found");
   }
 
   return await prisma.invitation.update({
     where: { id: invitationId },
-    data: { status: 'DECLINED' },
+    data: { status: "DECLINED" },
   });
 }
 
-export async function revokeInvitation(invitationId: string) {
-  const invitation = await prisma.invitation.findUnique({ 
+async function revokeInvitation(invitationId: string): Promise<Invitation> {
+  const invitation = await prisma.invitation.findUnique({
     where: { id: invitationId },
     select: { status: true },
   });
@@ -94,10 +99,10 @@ export async function revokeInvitation(invitationId: string) {
  * @param teamId - id of team
  * @return invitation object
  */
-export async function createOrSendInvitation(
+async function createOrSendInvitation(
   senderId: string,
   recipientId: string,
-  teamId: string
+  teamId: string,
 ) {
   const [sender, recipient, team, existingInvite] = await prisma.$transaction([
     prisma.user.findUnique({ where: { id: senderId } }),
@@ -118,24 +123,24 @@ export async function createOrSendInvitation(
   if (!team) {
     throw new Error("Team's ID not found");
   }
-  if (existingInvite && existingInvite.status === 'PENDING') {
-    throw new Error('Invite already exists');
+  if (existingInvite && existingInvite.status === "PENDING") {
+    throw new Error("Invite already exists");
   }
 
   if (existingInvite) {
     return await prisma.invitation.update({
       where: { id: existingInvite.id },
-      data: { status: 'PENDING' },
+      data: { status: "PENDING" },
     });
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: TransactionClient) => {
     const invitation = await tx.invitation.create({
       data: {
         senderId,
         recipientId,
         teamId,
-        status: 'PENDING',
+        status: "PENDING",
       },
     });
     await tx.user.update({
@@ -162,13 +167,23 @@ export async function createOrSendInvitation(
   });
 }
 
-export async function fetchInvitations(userId: string) {
+async function fetchInvitations(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { receivedInvites: true },
   });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
   return user.receivedInvites;
 }
+
+const InvitationService = {
+  acceptInvitation,
+  declineInvitation,
+  fetchInvitations,
+  revokeInvitation,
+  createOrSendInvitation,
+};
+
+export default InvitationService;

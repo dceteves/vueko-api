@@ -1,11 +1,14 @@
-import { Router } from 'express';
+import { Router } from "express";
 
-import InvitationRequestHandler from '../../handlers/service/invitation.ts';
+import InvitationRequestHandler from "../../handlers/service/invitation.ts";
 
-const router = Router();
+const invitationServiceRouter = Router();
 
-router.post('/', InvitationRequestHandler.createInvitation);
-router.get('/me', InvitationRequestHandler.getInvitations);
-router.patch('/:invitationId/:action', InvitationRequestHandler.updateInvitation);
+invitationServiceRouter.post("/", InvitationRequestHandler.createInvitation);
+invitationServiceRouter.get("/me", InvitationRequestHandler.getInvitations);
+invitationServiceRouter.patch(
+  "/:invitationId/:action",
+  InvitationRequestHandler.updateInvitation,
+);
 
-export default router;
+export default invitationServiceRouter;

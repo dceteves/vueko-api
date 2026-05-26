@@ -1,6 +1,9 @@
-import passport from '../lib/passport.ts';
-import type { NextFunction } from 'express';
-import type { ProviderRequest, ProviderResponse } from '../types/handler.types.ts';
+import passport from "../lib/passport.ts";
+import type { NextFunction } from "express";
+import type {
+  ProviderRequest,
+  ProviderResponse,
+} from "../types/handler.types.ts";
 // import type { Provider } from '../types/profile.types.ts';
 
 // function isProvider(provider: string): provider is Provider {
@@ -10,7 +13,7 @@ import type { ProviderRequest, ProviderResponse } from '../types/handler.types.t
 export function handleProviderLink(
   req: ProviderRequest,
   res: ProviderResponse,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const { provider } = req.params;
 

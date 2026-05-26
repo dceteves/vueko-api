@@ -1,1 +1,1 @@
-export declare type InvitationAction = 'accept' | 'decline' | 'revoke';
+export type InvitationAction = "accept" | "decline" | "revoke";

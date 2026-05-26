@@ -1,45 +1,49 @@
-import type { Request, Response } from 'express';
-import type { Team, User, Invitation } from '../generated/prisma/client';
-import type { InvitationAction } from './invitation.types';
-import type { Provider } from './passport.types';
+import type { Request, Response } from "express";
+import type { Team, User, Invitation } from "../generated/prisma/client.ts";
+import type { InvitationAction } from "./invitation.types.ts";
+import type { Provider } from "./passport.types.ts";
 
-export declare type SimpleTeam = Pick<Team, 'name' | 'id'>;
+export type SimpleTeam = Pick<Team, "name" | "id">;
 
-export declare type TeamIdParams = { teamId: string };
-export declare type UserIdParams = { userId: string };
-export declare type InvitationIdParams = { invitationId: string };
-export declare type ActionParams = { action: InvitationAction };
-export declare type ProviderParams = { provider: Provider };
-export declare type UpdateInvitationParams = InvitationIdParams & ActionParams;
+export type TeamIdParams = { teamId: string };
+export type UserIdParams = { userId: string };
+export type InvitationIdParams = { invitationId: string };
+export type ActionParams = { action: InvitationAction };
+export type ProviderParams = { provider: Provider };
+export type UpdateInvitationParams = InvitationIdParams & ActionParams;
 
-export declare type MessageBody = { message: string };
-export declare type NameBody = { name: string };
-export declare type RecipientIdBody = { recipientId: string };
-export declare type TeamBody = Team | Team[] | SimpleTeam;
-export declare type InvitationBody = Invitation | Invitation[];
-export declare type StateQuery = { state: string };
-export declare type TimezoneBody = { timezone: number };
+export type MessageBody = { message: string };
+export type NameBody = { name: string };
+export type RecipientIdBody = { recipientId: string };
+export type TeamBody = Team | Team[] | SimpleTeam;
+export type InvitationBody = Invitation | Invitation[];
+export type StateQuery = { state: string };
+export type TimezoneBody = { timezone: number };
 
-export declare type ProviderReqBody = MessageBody;
-export declare type ProviderRequest = Request<ProviderParams>;
-export declare type ProviderResponse = Response<ProviderReqBody>;
+export type ProviderReqBody = MessageBody;
+export type ProviderRequest = Request<ProviderParams>;
+export type ProviderResponse = Response<ProviderReqBody>;
 
-export declare type TeamParams = TeamIdParams;
-export declare type TeamReqBody = TeamBody & NameBody;
-export declare type TeamResBody = MessageBody | TeamBody;
-export declare type TeamRequest = Request<TeamParams, null, TeamReqBody>;
-export declare type TeamResponse = Response<TeamResBody>;
+export type TeamParams = TeamIdParams;
+export type TeamReqBody = TeamBody & NameBody;
+export type TeamResBody = MessageBody | TeamBody;
+export type TeamRequest = Request<TeamParams, null, TeamReqBody>;
+export type TeamResponse = Response<TeamResBody>;
 
-export declare type UserParams = UserIdParams;
-export declare type UserReqBody = TimezoneBody;
-export declare type UserRequest = Request<UserParams, null, UserReqBody>;
-export declare type UserResponse = Response<MessageBody | User>;
+export type UserParams = UserIdParams;
+export type UserReqBody = TimezoneBody;
+export type UserRequest = Request<UserParams, null, UserReqBody>;
+export type UserResponse = Response<MessageBody | User>;
 
-export declare type CreateInvitationRequest = Request<null, null, RecipientIdBody>;
-export declare type UpdateInvitationRequest = Request<UpdateInvitationParams>;
+export type CreateInvitationRequest = Request<null, null, RecipientIdBody>;
+export type UpdateInvitationRequest = Request<UpdateInvitationParams>;
 
-export declare type InvitationParams = UpdateInvitationParams;
-export declare type InvitationReqBody = RecipientIdBody;
-export declare type InvitationResBody = MessageBody | InvitationBody;
-export declare type InvitationRequest = Request<InvitationParams, null, InvitationReqBody>;
-export declare type InvitationResponse = Response<InvitationResBody>;
+export type InvitationParams = UpdateInvitationParams;
+export type InvitationReqBody = RecipientIdBody;
+export type InvitationResBody = MessageBody | InvitationBody;
+export type InvitationRequest = Request<
+  InvitationParams,
+  null,
+  InvitationReqBody
+>;
+export type InvitationResponse = Response<InvitationResBody>;

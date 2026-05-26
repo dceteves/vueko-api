@@ -1,11 +1,11 @@
-import * as TeamService from '../../services/team.ts';
-import type { TeamRequest, TeamResponse } from '../../types/handler.types.ts';
+import TeamService from "@services/team.ts";
+import type { TeamRequest, TeamResponse } from "../../types/handler.types.ts";
 
 async function createTeam(req: TeamRequest, res: TeamResponse) {
   const captainId = req.user!.id;
   const { name } = req.body;
   if (!name) {
-    return res.status(401).json({ message: 'Name not specified' });
+    return res.status(401).json({ message: "Name not specified" });
   }
   try {
     const team = await TeamService.createTeam(captainId, name.toString());
@@ -17,13 +17,13 @@ async function createTeam(req: TeamRequest, res: TeamResponse) {
 }
 
 async function getTeams(_req: TeamRequest, res: TeamResponse) {
-  res.json(await TeamService.fetchTeams());
+  res.json(await TeamService.getAllTeams());
 }
 
 async function getTeam(req: TeamRequest, res: TeamResponse) {
   const { teamId } = req.params;
   try {
-    res.json(await TeamService.fetchTeam(teamId));
+    res.json(await TeamService.findTeam(teamId));
   } catch (err) {
     res.json({ message: (err as Error).message });
   }
@@ -44,7 +44,7 @@ async function deleteTeam(req: TeamRequest, res: TeamResponse) {
   const { teamId } = req.params;
   try {
     await TeamService.deleteTeam(teamId);
-    res.json({ message: 'Team successfully deleted' });
+    res.json({ message: "Team successfully deleted" });
   } catch (err) {
     res.json({ message: (err as Error).message });
   }

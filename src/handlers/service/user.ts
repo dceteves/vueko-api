@@ -1,5 +1,4 @@
-import UserService from "../../services/user.ts";
-
+import UserService from "@services/user.ts";
 import type { UserRequest, UserResponse } from "../../types/handler.types.ts";
 
 function me(req: UserRequest, res: UserResponse) {

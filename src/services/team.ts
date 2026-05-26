@@ -1,12 +1,12 @@
 import type { TransactionClient } from "../generated/prisma/internal/prismaNamespace.ts";
-import { prisma } from "../lib/prisma.ts";
+import prisma from "../lib/prisma.ts";
 
 /**
  * @param captainId - id of the captain
  * @param teamName - name of the team
  * @return team object
  */
-export async function createTeam(captainId: string, teamName: string) {
+async function createTeam(captainId: string, teamName: string) {
   const user = await prisma.user.findUnique({
     where: { id: captainId },
     select: {
@@ -28,7 +28,7 @@ export async function createTeam(captainId: string, teamName: string) {
   }
 
   try {
-    const team = await prisma.$transaction(async (tx) => {
+    const team = await prisma.$transaction(async (tx: TransactionClient) => {
       const newTeam = await tx.team.create({
         data: {
           name: teamName,
@@ -47,10 +47,10 @@ export async function createTeam(captainId: string, teamName: string) {
   }
 }
 
-export async function fetchTeams() {
+async function getAllTeams() {
   return await prisma.team.findMany({});
 }
-export async function fetchTeam(teamId: string) {
+async function findTeam(teamId: string) {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
   });
@@ -61,7 +61,7 @@ export async function fetchTeam(teamId: string) {
   return team;
 }
 
-export async function updateTeam(teamId: string, newName: string) {
+async function updateTeam(teamId: string, newName: string) {
   const team = await prisma.team.update({
     where: { id: teamId },
     data: { name: newName },
@@ -73,7 +73,7 @@ export async function updateTeam(teamId: string, newName: string) {
   return team;
 }
 
-export async function deleteTeam(teamId: string): Promise<void> {
+async function deleteTeam(teamId: string): Promise<void> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     select: { members: { select: { id: true } } },
@@ -98,3 +98,13 @@ export async function deleteTeam(teamId: string): Promise<void> {
     ]);
   });
 }
+
+const TeamService = {
+  createTeam,
+  getAllTeams,
+  findTeam,
+  updateTeam,
+  deleteTeam,
+};
+
+export default TeamService;
