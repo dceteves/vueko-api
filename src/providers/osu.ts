@@ -1,11 +1,11 @@
-import UserService from "@services/user.ts";
-import StrategyFactory from "@utils/strategy-factory.ts";
+import StrategyFactory from "../utils/strategy-factory.ts";
+import UserService from "../services/user.ts";
 
-import type { OsuProfile } from "types/passport.types.ts";
 import type {
   StrategyOptions,
   StrategyOptionsWithRequest,
 } from "passport-oauth2";
+import type { OsuProfile } from "../types/passport.types.ts";
 
 const osuConfigOptions: StrategyOptions = {
   clientID: `${process.env.OSU_CLIENT_ID}`,

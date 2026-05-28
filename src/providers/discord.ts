@@ -1,7 +1,7 @@
-import UserService from "@services/user.ts";
-import StrategyFactory from "@utils/strategy-factory.ts";
+import UserService from "../services/user.ts";
+import StrategyFactory from "../utils/strategy-factory.ts";
 
-import type { DiscordProfile } from "types/passport.types.ts";
+import type { DiscordProfile } from "../types/passport.types.ts";
 import type {
   StrategyOptions,
   StrategyOptionsWithRequest,
