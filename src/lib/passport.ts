@@ -1,13 +1,14 @@
 import "dotenv/config";
 import passport from "passport";
-import { OsuStrategy, OsuStrategyWithRequest } from "@lib/passport/osu.ts";
+
 import {
   DiscordStrategy,
   DiscordStrategyWithRequest,
-} from "@lib/passport/discord.ts";
+} from "../providers/discord.ts";
+import { OsuStrategy, OsuStrategyWithRequest } from "../providers/osu.ts";
 
 import type OAuth2Strategy from "passport-oauth2";
-import type { Provider, SerializedUser } from "types/passport.types.ts";
+import type { Provider, SerializedUser } from "../types/passport.types.ts";
 
 const PROVIDER_STRATEGIES: Record<Provider, [OAuth2Strategy, OAuth2Strategy]> =
   {

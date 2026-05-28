@@ -15,19 +15,7 @@
     "typeRoots": [
       "./src/types",
       "./node_modules/@types"
-    ],
-    "baseUrl": ".",
-    "paths": { 
-      "app": [ "src/", "src/app.ts" ],
-      "@generated/*": [ "src/generated/*", "src/generated" ],
-      "@lib/*": [ "src/lib/*", "src/lib" ],
-      "@services/*": [ "src/services/*", "src/services" ],
-      "@handlers/*": [ "src/handlers/*", "src/handlers" ],
-      "@middleware/*": [ "src/middleware/*", "src/middleware" ],
-      "@routes/*": [ "src/routes/*", "src/routes" ],
-      "@utils/*": [ "src/utils/*", "src/utils" ],
-      "types/*": [ "src/types/*" ]
-    }
+    ]
   },
   "include": [
     "index.ts",

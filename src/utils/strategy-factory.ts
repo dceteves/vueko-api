@@ -1,8 +1,8 @@
 import OAuth2Strategy from "passport-oauth2";
-import UserService from "@services/user.ts";
+import UserService from "../services/user.ts";
 
 import type { Request } from "express";
-import type { User } from "@generated/prisma/client.ts";
+import type { User } from "../generated/prisma/client.ts";
 
 type ProfileFunction<TProfile> = (
   accessToken: string,
@@ -100,10 +100,11 @@ function createOAuth2StrategyWithRequest<TProfile>(
   return strategy;
 }
 
-export default {
+const StrategyFactory = {
   createVerifyFunction,
   createVerifyFunctionWithRequest,
   createOAuth2Strategy,
   createOAuth2StrategyWithRequest,
   createProfileFunction,
 };
+export default StrategyFactory;

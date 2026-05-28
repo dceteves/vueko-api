@@ -1,10 +1,11 @@
-import InvitationService from "@services/invitation.ts";
-import type { Invitation } from "@generated/prisma/client.ts";
-import type { InvitationAction } from "types/invitation.types.ts";
+import InvitationService from "../../services/invitation.ts";
+
+import type { Invitation } from "../../generated/prisma/client.ts";
+import type { InvitationAction } from "../../types/invitation.types.ts";
 import type {
   InvitationRequest,
   InvitationResponse,
-} from "types/handler.types.ts";
+} from "../../types/handler.types.ts";
 
 async function createInvitation(
   req: InvitationRequest,

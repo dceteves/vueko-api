@@ -1,5 +1,5 @@
-import { isOsuProfile, isDiscordProfile } from "types/passport.types.ts";
-import type { UserUpsertArgs } from "@generated/prisma/models.ts";
+import { isOsuProfile, isDiscordProfile } from "../types/passport.types.ts";
+import type { UserUpsertArgs } from "../generated/prisma/models.ts";
 
 /**
  * Helper function for findOrCreateUserFromProfile

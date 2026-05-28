@@ -1,5 +1,5 @@
-import prisma from "@lib/prisma.ts";
-import type { UserModel } from "@generated/prisma/models.ts";
+import prisma from "../lib/prisma.ts";
+import type { UserModel } from "../generated/prisma/models.ts";
 
 export default class TokenManager {
   async getValidAccessToken(userId: string) {

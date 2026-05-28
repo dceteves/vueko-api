@@ -1,4 +1,4 @@
-import TeamService from "@services/team.ts";
+import TeamService from "../../services/team.ts";
 import type { TeamRequest, TeamResponse } from "../../types/handler.types.ts";
 
 async function createTeam(req: TeamRequest, res: TeamResponse) {
