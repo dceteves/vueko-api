@@ -1,36 +1,39 @@
-import { isOsuProfile, isDiscordProfile } from "../types/passport.types.ts";
-import type { UserUpsertArgs } from "../generated/prisma/models.ts";
+import {
+  isOsuProfile,
+  isDiscordProfile,
+  type OsuProfile,
+  type DiscordProfile,
+} from "../types/passport.types.ts";
 
 /**
- * Helper function for findOrCreateUserFromProfile
+ * Helper function for userFromProfile
  */
-export function generateUserUpsertArgs<TProfile>(
-  accessToken: string,
-  refreshToken: string,
-  profile: TProfile,
-): UserUpsertArgs | null {
-  let where, data;
-
+export function extractProfile(profile: unknown) {
   if (isOsuProfile(profile)) {
-    where = { osuId: profile.id };
-    data = {
-      accessToken,
-      refreshToken,
-      osuUsername: profile.username,
-      osuAvatar: profile.avatar_url,
-      countryCode: profile.country_code,
-      tokenExpiresAt: new Date(Date.now() + 86400 * 1000),
-    };
-  } else if (isDiscordProfile(profile)) {
-    where = { discordId: profile.id };
-    data = { discordUsername: profile.username };
-  } else {
-    return null;
+    return extractOsuProfile(profile);
   }
 
+  if (isDiscordProfile(profile)) {
+    return extractDiscordProfile(profile);
+  }
+
+  return null;
+}
+
+function extractOsuProfile(profile: OsuProfile) {
   return {
-    where: where,
-    update: data,
-    create: { ...where, ...data },
+    where: { osuId: profile.id },
+    update: {
+      osuUsername: profile.username || profile.displayName,
+      osuAvatar: profile.avatar_url,
+      countryCode: profile.country_code,
+    },
+  };
+}
+
+function extractDiscordProfile(profile: DiscordProfile) {
+  return {
+    where: { discordId: profile.id },
+    update: { discordUsername: profile.username || profile.displayName },
   };
 }

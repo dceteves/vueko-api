@@ -7,7 +7,7 @@ import { InvitationNotFoundError } from "../../../src/utils/error";
 import { mockInvitation } from "../../mocks/invitation";
 
 // Mock the prisma module
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/prisma.ts", () => ({
   default: prismaMock,
 }));
 
@@ -15,8 +15,21 @@ describe("InvitationRepository", () => {
   let invitationRepo: InvitationRepository;
 
   beforeEach(() => {
-    mockReset(prismaMock);
-    vi.clearAllMocks();
+    // Don't use mockReset as it destroys the deep mock structure
+    // Just clear the mock calls and histories
+    prismaMock.invitation.findUnique.mockClear();
+    prismaMock.invitation.findMany.mockClear();
+    prismaMock.invitation.findFirst.mockClear();
+    prismaMock.invitation.create.mockClear();
+    prismaMock.invitation.update.mockClear();
+    prismaMock.invitation.delete.mockClear();
+    prismaMock.invitation.upsert.mockClear();
+    prismaMock.$transaction.mockClear();
+
+    // Mock TransactionManager static methods
+    vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
+    vi.spyOn(TransactionManager, "getClient").mockReturnValue(prismaMock as any);
+
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {
       return callback(prismaMock);
@@ -140,6 +153,22 @@ describe("InvitationRepository", () => {
         update: { status: "ACCEPTED" },
       });
     });
+
+    it("calls prisma.invitation.updateMany", async () => {
+      const mockCount = { count: 2 };
+      prismaMock.invitation.updateMany.mockResolvedValueOnce(mockCount);
+
+      const result = await invitationRepo.updateMany({
+        where: { status: "PENDING" },
+        data: { status: "DECLINED" },
+      });
+
+      expect(result).toEqual(mockCount);
+      expect(prismaMock.invitation.updateMany).toHaveBeenCalledWith({
+        where: { status: "PENDING" },
+        data: { status: "DECLINED" },
+      });
+    });
   });
 
   describe("uses transaction client when in transaction", () => {
@@ -150,20 +179,21 @@ describe("InvitationRepository", () => {
         },
       };
 
-      prismaMock.$transaction.mockImplementationOnce(async (callback) => {
-        return callback(mockTxClient as any);
-      });
+      // Override the TransactionManager.getClient mock for this test
+      const originalGetClient = TransactionManager.getClient;
+      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(mockTxClient as any);
 
-      await TransactionManager.run(async () => {
-        await invitationRepo.create({
-          data: { teamId: "1", senderId: "1", recipientId: "2" },
-        });
+      await invitationRepo.create({
+        data: { teamId: "1", senderId: "1", recipientId: "2" },
       });
 
       expect(mockTxClient.invitation.create).toHaveBeenCalledWith({
         data: { teamId: "1", senderId: "1", recipientId: "2" },
       });
       expect(prismaMock.invitation.create).not.toHaveBeenCalled();
+
+      // Restore the original mock
+      TransactionManager.getClient.mockReturnValue(originalGetClient());
     });
   });
 });

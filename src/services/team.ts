@@ -1,110 +1,143 @@
-import type { TransactionClient } from "../generated/prisma/internal/prismaNamespace.ts";
-import prisma from "../lib/prisma.ts";
+import type { Team } from "../generated/prisma/client.ts";
+import TransactionManager from "../managers/prisma-tx.ts";
+import TeamRepository from "../repositories/team.ts";
+import UserRepository from "../repositories/user.ts";
+import {
+  NotProvidedError,
+  UnexpectedError,
+  UserNotFoundError,
+} from "../utils/error.ts";
+import { ok, err, type Result } from "../utils/result.ts";
 
-/**
- * @param captainId - id of the captain
- * @param teamName - name of the team
- * @return team object
- */
-async function createTeam(captainId: string, teamName: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: captainId },
-    select: {
-      teamId: true,
-      discordId: true,
-    },
-  });
+export default class TeamService {
+  private userRepo: UserRepository;
+  private teamRepo: TeamRepository;
 
-  if (!user) {
-    throw new Error("User not found");
+  constructor(userRepo?: UserRepository, teamRepo?: TeamRepository) {
+    this.userRepo = userRepo || new UserRepository();
+    this.teamRepo = teamRepo || new TeamRepository();
   }
 
-  if (!user.discordId) {
-    throw new Error("User does not have Discord linked");
+  /**
+   * @param captainId - id of the captain
+   * @param name - name of the team
+   * @return team object
+   */
+  async createTeam(captainId: string, name: string): Promise<Result<Team>> {
+    if (!captainId) {
+      return err(new NotProvidedError("Captain ID"));
+    }
+    if (!name) {
+      return err(new NotProvidedError("TeamName"));
+    }
+
+    const validateCaptain = async () => {
+      try {
+        const { discordId, teamId } = await this.userRepo.findUnique({
+          where: { id: captainId },
+          select: { discordId: true, teamId: true },
+        });
+
+        if (!discordId) {
+          throw new Error("User does not have Discord linked");
+        }
+
+        if (teamId) {
+          throw new Error("User is already on a team");
+        }
+
+        return null;
+      } catch (error) {
+        if (error instanceof UserNotFoundError) {
+          throw new Error("Captain not found");
+        }
+        throw error;
+      }
+    };
+
+    const createTeam = () =>
+      this.teamRepo.create({ data: { captainId, name } });
+
+    try {
+      const team = await TransactionManager.run(async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, team] = await Promise.all([validateCaptain(), createTeam()]);
+        return team;
+      });
+      return ok(team);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
   }
 
-  if (user.teamId) {
-    throw new Error("User is already on a team");
+  async getAllTeams(): Promise<Result<Team[]>> {
+    const teams = await this.teamRepo.findMany({});
+    return ok(teams);
   }
 
-  try {
-    const team = await prisma.$transaction(async (tx: TransactionClient) => {
-      const newTeam = await tx.team.create({
-        data: {
-          name: teamName,
-          captainId: captainId,
+  async findTeam(id: string): Promise<Result<Team>> {
+    try {
+      const team = await this.teamRepo.findUnique({ where: { id } });
+      return ok(team);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
+
+  async updateTeam(id: string, newName: string): Promise<Result<Team>> {
+    try {
+      const team = await this.teamRepo.update({
+        where: { id: id },
+        data: { name: newName },
+      });
+      return ok(team);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
+
+  async removeTeam(id: string): Promise<Result<Team>> {
+    const getMembers = async () =>
+      await this.teamRepo.findUnique({
+        where: { id },
+        select: {
+          members: {
+            select: { id: true },
+          },
         },
       });
-      await tx.user.update({
-        where: { id: captainId },
-        data: { teamId: newTeam.id },
+
+    const getUpdateMemberTxs = async () => {
+      const { members } = await getMembers();
+
+      return members.map(({ id }) => {
+        this.userRepo.update({ where: { id }, data: { teamId: null } });
       });
-      return newTeam;
-    });
-    return team;
-  } catch (err) {
-    throw err as Error;
+    };
+
+    const tx = async () => {
+      const updateMemberTxs = await getUpdateMemberTxs();
+      await Promise.all(updateMemberTxs);
+      return await this.teamRepo.delete({ where: { id } });
+    };
+
+    try {
+      const team = await TransactionManager.run(tx);
+      return ok(team);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
   }
 }
-
-async function getAllTeams() {
-  return await prisma.team.findMany({});
-}
-async function findTeam(teamId: string) {
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-  });
-
-  if (!team) {
-    throw new Error("Team not found");
-  }
-  return team;
-}
-
-async function updateTeam(teamId: string, newName: string) {
-  const team = await prisma.team.update({
-    where: { id: teamId },
-    data: { name: newName },
-    select: { id: true, name: true },
-  });
-  if (!team) {
-    throw new Error("Team not found");
-  }
-  return team;
-}
-
-async function deleteTeam(teamId: string): Promise<void> {
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    select: { members: { select: { id: true } } },
-  });
-
-  if (!team) {
-    throw new Error("Team not found");
-  }
-
-  await prisma.$transaction(async (tx: TransactionClient) => {
-    const memberPromises = team.members.map((member) => {
-      tx.user.update({
-        where: { id: member.id },
-        data: { teamId: null },
-        select: { id: true },
-      });
-    });
-
-    await Promise.all([
-      ...memberPromises,
-      tx.team.delete({ where: { id: teamId } }),
-    ]);
-  });
-}
-
-const TeamService = {
-  createTeam,
-  getAllTeams,
-  findTeam,
-  updateTeam,
-  deleteTeam,
-};
-
-export default TeamService;

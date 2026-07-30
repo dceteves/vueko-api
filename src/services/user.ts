@@ -1,123 +1,189 @@
-import prisma from "../lib/prisma.ts";
-import { generateUserUpsertArgs } from "../utils/prisma.ts";
+import UserRepository from "../repositories/user.ts";
+import { extractProfile } from "../utils/prisma.ts";
+import { ok, err, type Result } from "../utils/result.ts";
 
 import type { User } from "../generated/prisma/client.ts";
 import type { OsuProfile, DiscordProfile } from "../types/passport.types.ts";
+import type { Profile } from "passport";
+import { NotProvidedError, UnexpectedError } from "../utils/error.ts";
 
-/**
- * TODO:
- * User creation
- * @async
- * @param accessToken
- * @param refreshToken
- * @param profile - Object containing user info
- * @return user
- */
-async function findOrCreateUserFromProfile<TProfile>(
-  accessToken: string,
-  refreshToken: string,
-  profile: TProfile,
-): Promise<User> {
-  const args = generateUserUpsertArgs<TProfile>(
-    accessToken,
-    refreshToken,
-    profile,
-  );
-  if (!args) {
-    throw new Error("Could not generate query arguments from profile");
+export default class UserService {
+  private repo: UserRepository;
+
+  constructor(repo?: UserRepository) {
+    this.repo = repo || new UserRepository();
   }
-  return await prisma.user.upsert(args);
-}
 
-/**
- * Fetch user from id
- * @async
- * @throws User not found Error
- * @param userId User ID
- */
-async function fetchUser(userId: string): Promise<User | null> {
-  return await prisma.user.findUnique({ where: { id: userId } });
-}
+  // TODO: ?
+  //private async invoke(op: () => void, args);
 
-/**
- * Attach Osu credentials to existing user
- * @async
- */
-async function linkOsuProfile(
-  userId: string,
-  profile: OsuProfile,
-): Promise<User> {
-  return await prisma.user.update({
-    where: { id: userId },
-    data: {
-      osuId: profile.id,
-      osuUsername: profile.username,
-      osuAvatar: profile.avatar_url,
-      countryCode: profile.country_code,
-    },
-  });
-}
+  /**
+   * TODO:
+   * User creation
+   * @async
+   * @param refreshToken
+   * @param refreshToken
+   * @param profile - Object containing user info
+   * @return user
+   */
+  async userFromProfile<T extends Profile>(
+    accessToken: string,
+    refreshToken: string,
+    profile: T,
+  ): Promise<Result<User>> {
+    if (!accessToken) {
+      return err(new NotProvidedError("Access token"));
+    }
+    if (!refreshToken) {
+      return err(new NotProvidedError("Refresh token"));
+    }
 
-/**
- * Helper function for DiscordStrategy
- * Link discord id and username to user record
- * @async
- * @throws error
- * @param userId
- * @param profile Discord profile (discordId and discordUsername)
- * @return user promise
- */
-async function linkDiscordProfile(
-  userId: string,
-  profile: DiscordProfile,
-): Promise<User> {
-  return await prisma.user.update({
-    where: { id: userId },
-    data: {
-      discordId: profile.id,
-      discordUsername: profile.username,
-    },
-  });
-}
+    const data = extractProfile(profile);
 
-/**
- * Helper function for DiscordStrategy
- * @async
- * @throws error
- * @param userId
- */
-async function dropDiscordCredentials(userId: string): Promise<User> {
-  return await prisma.user.update({
-    where: { id: userId },
-    data: {
-      discordId: null,
-      discordUsername: null,
-    },
-  });
-}
+    if (!data) {
+      return err(new Error("Invalid profile provided"));
+    }
 
-/**
- * Update timezone field of user
- * @async
- * @throws Invalid timezone error
- */
-async function updateTimezone(userId: string, timezone: number): Promise<User> {
-  if (timezone < -12 || timezone > 14) {
-    throw new Error("Invalid timezone specified");
+    const { where, update } = data;
+
+    const user = await this.repo.upsert({
+      where,
+      update,
+      create: { ...where, ...update },
+    });
+
+    return ok(user);
   }
-  return await prisma.user.update({
-    where: { id: userId },
-    data: { timezone },
-  });
+
+  /**
+   * Fetch user from id
+   * @async
+   * @throws User not found Error
+   * @param id User ID
+   */
+  async findUser(id: string): Promise<Result<User>> {
+    if (!id) {
+      return err(new NotProvidedError("Id"));
+    }
+    const user = await this.repo.findUnique({ where: { id } });
+
+    return ok(user);
+  }
+
+  /**
+   * Attach Osu credentials to existing user
+   * @async
+   */
+  async linkOsuProfile(id: string, profile: OsuProfile): Promise<Result<User>> {
+    if (!id) {
+      return err(new NotProvidedError("Id"));
+    }
+
+    try {
+      const user = await this.repo.update({
+        where: { id },
+        data: {
+          osuId: profile.id,
+          osuUsername: profile.username,
+          osuAvatar: profile.avatar_url,
+          countryCode: profile.country_code,
+        },
+      });
+      return ok(user);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
+
+  /**
+   * Helper function for DiscordStrategy
+   * Link discord id and username to user record
+   * @async
+   * @throws error
+   * @param id
+   * @param profile Discord profile (discordId and discordUsername)
+   * @return user promise
+   */
+  async linkDiscordProfile(
+    id: string,
+    profile: DiscordProfile,
+  ): Promise<Result<User>> {
+    if (!id) {
+      return err(new NotProvidedError("Id"));
+    }
+
+    try {
+      const user = await this.repo.update({
+        where: { id: id },
+        data: {
+          discordId: profile.id,
+          discordUsername: profile.username,
+        },
+      });
+      return ok(user);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
+
+  /**
+   * Helper function for DiscordStrategy
+   * @async
+   * @throws error
+   * @param id
+   */
+  async dropDiscordCredentials(id: string): Promise<Result<User>> {
+    if (!id) {
+      return err(new NotProvidedError("Id"));
+    }
+
+    try {
+      const user = await this.repo.update({
+        where: { id: id },
+        data: {
+          discordId: null,
+          discordUsername: null,
+        },
+      });
+      return ok(user);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
+
+  /**
+   * Update timezone field of user
+   * @async
+   * @throws Invalid timezone error
+   */
+  async updateTimezone(id: string, timezone: number): Promise<Result<User>> {
+    if (!id) {
+      return err(new NotProvidedError("Id"));
+    }
+    if (timezone < -12 || timezone > 14) {
+      return err(new NotProvidedError("Invalid timezone"));
+    }
+
+    try {
+      const user = await this.repo.update({
+        where: { id },
+        data: { timezone },
+      });
+      return ok(user);
+    } catch (error) {
+      if (error instanceof Error) {
+        return err(error);
+      }
+      return err(new UnexpectedError());
+    }
+  }
 }
-
-const UserService = {
-  findOrCreateUserFromProfile,
-  fetchUser,
-  linkOsuProfile,
-  linkDiscordProfile,
-  dropDiscordCredentials,
-  updateTimezone,
-};
-
-export default UserService;

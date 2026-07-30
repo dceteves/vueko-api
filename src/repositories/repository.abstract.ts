@@ -10,16 +10,17 @@ type FindUniqueResult<T, A> = Result<T, A, "findUnique">;
 type FindManyResult<T, A> = Result<T, A, "findMany">;
 type FindFirstResult<T, A> = Result<T, A, "findFirst">;
 type UpdateResult<T, A> = Result<T, A, "update">;
+type UpdateManyResult<T, A> = Result<T, A, "updateMany">;
 type DeleteResult<T, A> = Result<T, A, "delete">;
 
 export abstract class Repository<T> {
   protected abstract getDelegate(): T;
   protected abstract getNotFoundError(): Error;
 
-  private async invoke<Op extends Operation, A extends OpInputs<T, Op>>(
-    op: (args: A) => Promise<Result<T, A, Op>>,
+  private async invoke<Op extends Operation, A extends OpInputs<T, Op>, M>(
+    op: (args: A) => Promise<M>,
     args: A,
-  ): Promise<Result<T, A, Op>> {
+  ): Promise<M> {
     try {
       return await op(args);
     } catch (error) {
@@ -80,13 +81,15 @@ export abstract class Repository<T> {
 
   async update<A extends OpInputs<T, "update">>(args: A) {
     const client = this.getDelegate() as any;
+    const result = await this.invoke(client.update, args);
+    return result as UpdateResult<T, A>;
+  }
 
-    const result = (await this.invoke(
-      client.update,
-      args,
-    )) satisfies UpdateResult<T, A>;
-
-    return result;
+  async updateMany<A extends OpInputs<T, "updateMany">>(
+    args: A,
+  ): Promise<UpdateManyResult<T, A>> {
+    const client = this.getDelegate() as any;
+    return await client.updateMany(args);
   }
 
   async delete<A extends OpInputs<T, "delete">>(args: A) {

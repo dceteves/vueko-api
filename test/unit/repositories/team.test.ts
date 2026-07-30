@@ -7,7 +7,7 @@ import { TeamNotFoundError } from "../../../src/utils/error";
 import { mockTeam } from "../../mocks/team";
 
 // Mock the prisma module
-vi.mock("../../../src/lib/prisma", () => ({
+vi.mock("../../../src/lib/prisma.ts", () => ({
   default: prismaMock,
 }));
 
@@ -15,8 +15,21 @@ describe("TeamRepository", () => {
   let teamRepo: TeamRepository;
 
   beforeEach(() => {
-    mockReset(prismaMock);
-    vi.clearAllMocks();
+    // Don't use mockReset as it destroys the deep mock structure
+    // Just clear the mock calls and histories
+    prismaMock.team.findUnique.mockClear();
+    prismaMock.team.findMany.mockClear();
+    prismaMock.team.findFirst.mockClear();
+    prismaMock.team.create.mockClear();
+    prismaMock.team.update.mockClear();
+    prismaMock.team.delete.mockClear();
+    prismaMock.team.upsert.mockClear();
+    prismaMock.$transaction.mockClear();
+
+    // Mock TransactionManager static methods
+    vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
+    vi.spyOn(TransactionManager, "getClient").mockReturnValue(prismaMock as any);
+
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {
       return callback(prismaMock);
@@ -145,18 +158,19 @@ describe("TeamRepository", () => {
         },
       };
 
-      prismaMock.$transaction.mockImplementationOnce(async (callback) => {
-        return callback(mockTxClient as any);
-      });
+      // Override the TransactionManager.getClient mock for this test
+      const originalGetClient = TransactionManager.getClient;
+      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(mockTxClient as any);
 
-      await TransactionManager.run(async () => {
-        await teamRepo.create({ data: { name: "test", captainId: "1" } });
-      });
+      await teamRepo.create({ data: { name: "test", captainId: "1" } });
 
       expect(mockTxClient.team.create).toHaveBeenCalledWith({
         data: { name: "test", captainId: "1" },
       });
       expect(prismaMock.team.create).not.toHaveBeenCalled();
+
+      // Restore the original mock
+      TransactionManager.getClient.mockReturnValue(originalGetClient());
     });
   });
 });
