@@ -2,7 +2,6 @@ import { AsyncLocalStorage } from "async_hooks";
 import prisma from "../lib/prisma.ts";
 
 import type { TransactionClient } from "../generated/prisma/internal/prismaNamespace.ts";
-import type { PrismaClient } from "../generated/prisma/client.ts";
 
 export default class TransactionManager {
   private static store = new AsyncLocalStorage<TransactionClient>();
@@ -13,11 +12,13 @@ export default class TransactionManager {
     }
 
     return prisma.$transaction(async (tx) => {
-      return this.store.run(tx, fn);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return this.store.run(tx as any, fn);
     });
   }
 
-  static getClient(): TransactionClient | PrismaClient {
-    return this.store.getStore() || prisma;
+  static getClient() {
+    const currentStore = this.store.getStore();
+    return currentStore || prisma;
   }
 }
