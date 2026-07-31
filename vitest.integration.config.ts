@@ -4,9 +4,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    setupFiles: "./test/integration/setup.ts",
     include: ["test/integration/**/*.test.ts"],
-    exclude: ["test/unit/**/*.test.ts"],
     reporters: ["verbose"],
-    setupFiles: ["./test/setup.integration.ts"],
+    pool: "forks",
+    // singleFork: true,
   },
 });

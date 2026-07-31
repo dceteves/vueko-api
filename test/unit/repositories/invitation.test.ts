@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { vi, it, beforeEach, expect, describe } from "vitest";
 import { prismaMock } from "../../mocks/prisma";
 import InvitationRepository from "../../../src/repositories/invitation";
@@ -18,7 +20,9 @@ describe("InvitationRepository", () => {
 
     // Mock TransactionManager static methods
     vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
-    vi.spyOn(TransactionManager, "getClient").mockReturnValue(prismaMock as any);
+    vi.spyOn(TransactionManager, "getClient").mockReturnValue(
+      prismaMock as any,
+    );
 
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {
@@ -63,10 +67,7 @@ describe("InvitationRepository", () => {
     });
 
     it("calls prisma.invitation.findMany", async () => {
-      const mockInvitations = [
-        mockInvitation,
-        { ...mockInvitation, id: "2" },
-      ];
+      const mockInvitations = [mockInvitation, { ...mockInvitation, id: "2" }];
       prismaMock.invitation.findMany.mockResolvedValueOnce(mockInvitations);
 
       const result = await invitationRepo.findMany({
@@ -171,7 +172,9 @@ describe("InvitationRepository", () => {
 
       // Override the TransactionManager.getClient mock for this test
       const originalGetClient = TransactionManager.getClient;
-      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(mockTxClient as any);
+      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(
+        mockTxClient as any,
+      );
 
       await invitationRepo.create({
         data: { teamId: "1", senderId: "1", recipientId: "2" },

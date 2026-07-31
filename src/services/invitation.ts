@@ -5,6 +5,7 @@ import TeamRepository from "../repositories/team.ts";
 import UserRepository from "../repositories/user.ts";
 import { ok, err, type Result } from "../utils/result.ts";
 import { UnexpectedError, ResourceNotFoundError } from "../utils/error.ts";
+
 import type { GetBatchResult } from "@prisma/client/runtime/client";
 import type { Invitation } from "../generated/prisma/client.ts";
 
@@ -160,7 +161,6 @@ export default class InvitationService {
           throw new Error("Invite already exists");
         }
         return id;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // Only catch ResourceNotFoundError, re-throw others
         if (error instanceof ResourceNotFoundError) {

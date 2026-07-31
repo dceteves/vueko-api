@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { vi, it, beforeEach, expect, describe } from "vitest";
 import { prismaMock } from "../../mocks/prisma";
 import TeamRepository from "../../../src/repositories/team";
@@ -18,7 +20,9 @@ describe("TeamRepository", () => {
 
     // Mock TransactionManager static methods
     vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
-    vi.spyOn(TransactionManager, "getClient").mockReturnValue(prismaMock as any);
+    vi.spyOn(TransactionManager, "getClient").mockReturnValue(
+      prismaMock as any,
+    );
 
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {
@@ -150,7 +154,9 @@ describe("TeamRepository", () => {
 
       // Override the TransactionManager.getClient mock for this test
       const originalGetClient = TransactionManager.getClient;
-      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(mockTxClient as any);
+      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(
+        mockTxClient as any,
+      );
 
       await teamRepo.create({ data: { name: "test", captainId: "1" } });
 
