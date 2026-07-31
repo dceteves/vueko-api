@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import { prismaMock } from "../managers/prisma-mock";
+import { prismaMock } from "../../mocks/prisma";
 import TeamService from "../../../src/services/team";
 import { mockTeam } from "../../mocks/team";
 import { mockUser } from "../../mocks/user";
@@ -22,7 +21,6 @@ describe("TeamService", () => {
   let teamRepo: TeamRepository;
 
   beforeEach(() => {
-    mockReset(prismaMock);
     vi.clearAllMocks();
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {

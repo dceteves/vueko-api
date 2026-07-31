@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import { prismaMock } from "../managers/prisma-mock";
+import { prismaMock } from "../../mocks/prisma";
 import UserService from "../../../src/services/user";
 import UserRepository from "../../../src/repositories/user";
 import { mockUser } from "../../mocks/user";
@@ -20,7 +19,6 @@ describe("UserService", () => {
   let userRepo: UserRepository;
 
   beforeEach(() => {
-    mockReset(prismaMock);
     vi.clearAllMocks();
 
     vi.spyOn(TransactionManager, "getClient").mockReturnValue(
@@ -323,7 +321,7 @@ describe("UserService", () => {
     });
 
     it("returns error when user not found", async () => {
-      prismaMock.user.update.mockThrow("User not found");
+      prismaMock.user.update.mockRejectedValueOnce(new Error("User not found"));
 
       const result = await userService.updateTimezone("1", 5);
 

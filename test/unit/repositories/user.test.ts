@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { vi, it, beforeEach, expect, describe } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import { prismaMock } from "../managers/prisma-mock";
+import { mockUser } from "../../mocks/user";
+import { prismaMock } from "../../mocks/prisma";
+
 import UserRepository from "../../../src/repositories/user";
 import TransactionManager from "../../../src/managers/prisma-tx";
 import { UserNotFoundError } from "../../../src/utils/error";
-import { mockUser } from "../../mocks/user";
 
 // Mock the prisma module
 vi.mock("../../../src/lib/prisma.ts", () => ({
@@ -15,25 +17,19 @@ describe("UserRepository", () => {
   let userRepo: UserRepository;
 
   beforeEach(() => {
-    // Don't use mockReset as it destroys the deep mock structure
-    // Just clear the mock calls and histories
-    prismaMock.user.findUnique.mockClear();
-    prismaMock.user.findMany.mockClear();
-    prismaMock.user.findFirst.mockClear();
-    prismaMock.user.create.mockClear();
-    prismaMock.user.update.mockClear();
-    prismaMock.user.delete.mockClear();
-    prismaMock.user.upsert.mockClear();
-    prismaMock.$transaction.mockClear();
+    vi.clearAllMocks();
 
     // Mock TransactionManager static methods
     vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
-    vi.spyOn(TransactionManager, "getClient").mockReturnValue(prismaMock as any);
+    vi.spyOn(TransactionManager, "getClient").mockReturnValue(
+      prismaMock as any,
+    );
 
     // Set default transaction implementation
     prismaMock.$transaction.mockImplementation(async (callback) => {
       return callback(prismaMock);
     });
+
     userRepo = new UserRepository();
   });
 
@@ -41,9 +37,7 @@ describe("UserRepository", () => {
     it("calls prisma.user.create", async () => {
       prismaMock.user.create.mockResolvedValueOnce(mockUser);
 
-      const result = await userRepo.create({
-        data: { osuUsername: "test" },
-      });
+      const result = await userRepo.create({ data: { osuUsername: "test" } });
 
       expect(result).toEqual(mockUser);
       expect(prismaMock.user.create).toHaveBeenCalledWith({
@@ -54,9 +48,7 @@ describe("UserRepository", () => {
     it("calls prisma.user.findUnique", async () => {
       prismaMock.user.findUnique.mockResolvedValueOnce(mockUser);
 
-      const result = await userRepo.findUnique({
-        where: { id: "1" },
-      });
+      const result = await userRepo.findUnique({ where: { id: "1" } });
 
       expect(result).toEqual(mockUser);
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
@@ -67,9 +59,9 @@ describe("UserRepository", () => {
     it("throws UserNotFoundError when findUnique returns null", async () => {
       prismaMock.user.findUnique.mockResolvedValueOnce(null);
 
-      await expect(
-        userRepo.findUnique({ where: { id: "nonexistent" } }),
-      ).rejects.toThrow(UserNotFoundError);
+      const operation = userRepo.findUnique({ where: { id: "nonexistent" } });
+
+      await expect(operation).rejects.toThrow(UserNotFoundError);
     });
 
     it("calls prisma.user.findMany", async () => {
@@ -100,9 +92,11 @@ describe("UserRepository", () => {
     it("throws UserNotFoundError when findFirst returns null", async () => {
       prismaMock.user.findFirst.mockResolvedValueOnce(null);
 
-      await expect(
-        userRepo.findFirst({ where: { osuUsername: "nonexistent" } }),
-      ).rejects.toThrow(UserNotFoundError);
+      const operation = userRepo.findFirst({
+        where: { osuUsername: "nonexistent" },
+      });
+
+      await expect(operation).rejects.toThrow(UserNotFoundError);
     });
 
     it("calls prisma.user.update", async () => {
@@ -170,14 +164,14 @@ describe("UserRepository", () => {
   describe("uses transaction client when in transaction", () => {
     it("uses transaction client for operations", async () => {
       const mockTxClient = {
-        user: {
-          create: vi.fn().mockResolvedValueOnce(mockUser),
-        },
+        user: { create: vi.fn().mockResolvedValueOnce(mockUser) },
       };
 
       // Override the TransactionManager.getClient mock for this test
       const originalGetClient = TransactionManager.getClient;
-      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(mockTxClient as any);
+      vi.spyOn(TransactionManager, "getClient").mockReturnValueOnce(
+        mockTxClient as any,
+      );
 
       await userRepo.create({ data: { osuUsername: "test" } });
 
@@ -187,7 +181,9 @@ describe("UserRepository", () => {
       expect(prismaMock.user.create).not.toHaveBeenCalled();
 
       // Restore the original mock
-      TransactionManager.getClient.mockReturnValue(originalGetClient());
+      vi.spyOn(TransactionManager, "getClient").mockReturnValue(
+        originalGetClient(),
+      );
     });
   });
 });

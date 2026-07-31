@@ -1,6 +1,5 @@
 import { vi, it, beforeEach, expect, describe } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import { prismaMock } from "../managers/prisma-mock";
+import { prismaMock } from "../../mocks/prisma";
 import InvitationRepository from "../../../src/repositories/invitation";
 import TransactionManager from "../../../src/managers/prisma-tx";
 import { InvitationNotFoundError } from "../../../src/utils/error";
@@ -15,16 +14,7 @@ describe("InvitationRepository", () => {
   let invitationRepo: InvitationRepository;
 
   beforeEach(() => {
-    // Don't use mockReset as it destroys the deep mock structure
-    // Just clear the mock calls and histories
-    prismaMock.invitation.findUnique.mockClear();
-    prismaMock.invitation.findMany.mockClear();
-    prismaMock.invitation.findFirst.mockClear();
-    prismaMock.invitation.create.mockClear();
-    prismaMock.invitation.update.mockClear();
-    prismaMock.invitation.delete.mockClear();
-    prismaMock.invitation.upsert.mockClear();
-    prismaMock.$transaction.mockClear();
+    vi.clearAllMocks();
 
     // Mock TransactionManager static methods
     vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());

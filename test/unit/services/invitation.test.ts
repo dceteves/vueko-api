@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { mockReset } from "vitest-mock-extended";
-import { prismaMock } from "../managers/prisma-mock";
+import { prismaMock } from "../../mocks/prisma";
 import InvitationService from "../../../src/services/invitation";
 import { mockInvitation } from "../../mocks/invitation";
 import { mockTeam } from "../../mocks/team";
@@ -25,16 +24,7 @@ describe("InvitationService", () => {
   let userRepo: UserRepository;
 
   beforeEach(() => {
-    // Don't use mockReset as it destroys the deep mock structure
-    // Just clear the mock calls and histories
-    prismaMock.invitation.findUnique.mockClear();
-    prismaMock.invitation.update.mockClear();
-    prismaMock.invitation.updateMany.mockClear();
-    prismaMock.invitation.findFirst.mockClear();
-    prismaMock.invitation.upsert.mockClear();
-    prismaMock.user.findUnique.mockClear();
-    prismaMock.user.update.mockClear();
-    prismaMock.team.findUnique.mockClear();
+    vi.clearAllMocks();
 
     // Mock TransactionManager static methods
     vi.spyOn(TransactionManager, "run").mockImplementation(async (fn) => fn());
