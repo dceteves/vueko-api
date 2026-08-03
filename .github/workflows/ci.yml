@@ -42,4 +42,5 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma migrate deploy
-      - run: npm test
+      - run: npm run test:unit
+      - run: npm run test:integration
