@@ -9,6 +9,6 @@ export default defineConfig({
     include: ["test/integration/**/*.test.ts"],
     reporters: ["verbose"],
     pool: "forks",
-    // singleFork: true,
+    singleFork: true,
   },
 });

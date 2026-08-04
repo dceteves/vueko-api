@@ -12,7 +12,7 @@ describe("User Database Integration Tests", () => {
     });
 
     it("finds user by ID", async () => {
-      const user = await createTestUser();
+      const user = await createTestUser({ osuUsername: `find_user_test_${Date.now()}` });
 
       const found = await prisma.user.findUnique({ where: { id: user.id } });
 

@@ -32,9 +32,41 @@ afterAll(async () => {
 afterEach(async () => {
   // Clean up test data created during tests
   // Delete in reverse dependency order
+  
+  // First, clear team memberships (users' teamId references)
+  await prisma.user.updateMany({
+    data: { teamId: null },
+  });
+  
+  // Delete invitations (they depend on both users and teams)
   await prisma.invitation.deleteMany();
-  await prisma.team.deleteMany();
-  await prisma.user.deleteMany();
+  
+  // Delete teams (they depend on users via captainId) - only delete test teams
+  await prisma.team.deleteMany({
+    where: {
+      name: {
+        startsWith: "Test Team"
+      }
+    }
+  });
+  
+  // Finally delete users - only delete test users (those with test_ prefix or test_repo_user)
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        {
+          osuUsername: {
+            startsWith: "test"
+          }
+        },
+        {
+          osuUsername: {
+            startsWith: "test_repo_user"
+          }
+        }
+      ]
+    }
+  });
 });
 
 // Helper function to get prisma client
@@ -44,9 +76,40 @@ export function getTestClient() {
 
 // Helper function to clean up specific test data
 export async function cleanupTestData() {
-  await prisma.user.deleteMany();
-  await prisma.team.deleteMany();
+  // First, clear team memberships (users' teamId references)
+  await prisma.user.updateMany({
+    data: { teamId: null },
+  });
+  
+  // Delete invitations (they depend on both users and teams)
   await prisma.invitation.deleteMany();
+  
+  // Delete teams (they depend on users via captainId) - only delete test teams
+  await prisma.team.deleteMany({
+    where: {
+      name: {
+        startsWith: "Test Team"
+      }
+    }
+  });
+  
+  // Finally delete users - only delete test users (those with test_ prefix or test_repo_user)
+  await prisma.user.deleteMany({
+    where: {
+      OR: [
+        {
+          osuUsername: {
+            startsWith: "test"
+          }
+        },
+        {
+          osuUsername: {
+            startsWith: "test_repo_user"
+          }
+        }
+      ]
+    }
+  });
 }
 
 // Helper function to create test user
