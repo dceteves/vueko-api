@@ -3,8 +3,23 @@ import prisma from "../../src/lib/prisma.ts";
 
 // Global setup for integration tests
 beforeAll(async () => {
-  // Ensure database connection
-  await prisma.$connect();
+  // Ensure database connection with retry logic
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      await prisma.$connect();
+      console.log("Database connected successfully");
+      return;
+    } catch (error) {
+      retries--;
+      console.log(`Connection failed, ${retries} retries left...`);
+      console.log("Error: ", error);
+      if (retries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+  }
+  throw new Error("Failed to connect to database after retries");
 });
 
 // Global cleanup for integration tests

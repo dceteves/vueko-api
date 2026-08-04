@@ -16,7 +16,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
         env:
-          DATABASE_URL: postgresql://prisma:prisma@localhost:5433/bge_tests
+          DATABASE_URL: postgresql://test:test@localhost:5432/bge_test
       - run: npx eslint .
       - run: npx tsc --noEmit
   test:
@@ -32,7 +32,7 @@ jobs:
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     env:
-      DATABASE_URL: postgres://test:test@localhost:5432/bge_test
+      DATABASE_URL: postgresql://test:test@localhost:5432/bge_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
