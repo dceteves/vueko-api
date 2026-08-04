@@ -1,4 +1,5 @@
 import "dotenv/config";
+
 import path from "path";
 import { defineConfig } from "prisma/config";
 
@@ -12,7 +13,7 @@ if (!DATABASE_URL) {
 
 export default defineConfig({
   schema: path.join("src", "prisma", "models"),
-  migrations: { 
+  migrations: {
     path: path.join("src", "prisma", "migrations"),
   },
   datasource: {

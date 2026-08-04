@@ -1,8 +1,9 @@
+import { loadEnv } from "vite";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   test: {
-    envFile: ".env.test",
+    env: loadEnv(mode, process.cwd(), ""),
     globals: true,
     environment: "node",
     setupFiles: "./test/integration/setup.ts",
@@ -11,4 +12,4 @@ export default defineConfig({
     pool: "forks",
     singleFork: true,
   },
-});
+}));

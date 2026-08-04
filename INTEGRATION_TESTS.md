@@ -21,39 +21,65 @@ Integration tests use a separate Vitest configuration file: `vitest.integration.
 
 The `test/integration/setup.ts` file handles:
 
-1. **Database Connection**: Connects to the Neon PostgreSQL database before all tests run
-2. **Test Data Cleanup**: Cleans up test data after each test using `afterEach` hooks
-3. **Helper Functions**: Provides utility functions for creating test data
+1. **Database Reset**: Resets the database before each test using `beforeEach` hooks
+2. **Simplified Cleanup**: Uses a transaction-based reset helper for consistent data cleanup
 
 ### Test Data Isolation
 
-To ensure tests don't interfere with each other, the setup uses `afterEach` hooks to clean up data created during each test:
+To ensure tests don't interfere with each other, the setup uses a simplified `beforeEach` hook with a transaction-based reset:
 
+**Setup File** (`test/integration/setup.ts`):
 ```typescript
-afterEach(async () => {
-  // Clean up test data created during tests
-  // Delete in reverse dependency order
-  await prisma.invitation.deleteMany();
-  await prisma.team.deleteMany();
-  await prisma.user.deleteMany();
+import { beforeEach } from "vitest";
+import resetDb from "./reset-db-helper.ts";
+
+beforeEach(async () => {
+  await resetDb();
 });
 ```
 
+**Reset Helper** (`test/integration/reset-db-helper.ts`):
+```typescript
+import prisma from "../../src/lib/prisma";
+
+export default async () => {
+  await prisma.$transaction([
+    prisma.invitation.deleteMany(),
+    prisma.team.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+};
+```
+
 This approach:
-- Deletes data in reverse dependency order (invitations → teams → users) to avoid foreign key constraint violations
-- Runs after every test to ensure clean state
-- Uses `deleteMany()` to efficiently remove all test data
-- Works reliably with the single-fork configuration to avoid race conditions
+- Uses **database transactions** to ensure atomic cleanup operations
+- Runs **before each test** to ensure a clean starting state
+- Deletes data in **correct dependency order** (invitations → teams → users) within a single transaction
+- **Eliminates foreign key constraint issues** by using transactional isolation
+- **Simpler and more reliable** than retry-based approaches
+- Works consistently with the `--no-file-parallelism` flag to avoid race conditions
 
 ### Helper Functions
 
-The setup file exports several helper functions to make writing tests easier:
+The new simplified setup no longer exports helper functions. Tests should use Prisma client directly:
 
-- `getTestClient()`: Returns the Prisma client instance
-- `createTestUser(data)`: Creates a test user with optional custom data
-- `createTestTeam(data)`: Creates a test team with optional custom data
-- `createTestInvitation(data)`: Creates a test invitation with optional custom data
-- `cleanupTestData()`: Manually cleans up all test data (useful in afterAll hooks)
+```typescript
+import prisma from "../../src/lib/prisma.ts";
+
+// Create test data directly
+const user = await prisma.user.create({
+  data: { osuUsername: "test_user" },
+});
+
+const team = await prisma.team.create({
+  data: {
+    captainId: user.id,
+    name: "Test Team",
+  },
+});
+```
+
+**Note**: Tests should use unique identifiers (timestamps, random strings) to avoid constraint violations, as the automatic cleanup happens before each test.
 
 ## Running Integration Tests
 
@@ -63,7 +89,7 @@ Run integration tests with:
 npm run test:integration
 ```
 
-This command uses the integration-specific Vitest configuration.
+This command uses the integration-specific Vitest configuration with the `--no-file-parallelism` flag to ensure tests run sequentially and avoid database conflicts.
 
 ## Writing Integration Tests
 
@@ -72,14 +98,21 @@ This command uses the integration-specific Vitest configuration.
 ```typescript
 import { describe, it, expect } from "vitest";
 import prisma from "../../src/lib/prisma.ts";
-import { createTestUser, createTestTeam } from "./setup";
 
 describe("Feature Integration Tests", () => {
   describe("Specific Feature", () => {
     it("does something", async () => {
-      // Create test data using helper functions
-      const user = await createTestUser();
-      const team = await createTestTeam({ captainId: user.id });
+      // Create test data directly using Prisma
+      const user = await prisma.user.create({
+        data: { osuUsername: `test_user_${Date.now()}` },
+      });
+      
+      const team = await prisma.team.create({
+        data: {
+          captainId: user.id,
+          name: `Test Team ${Date.now()}`,
+        },
+      });
 
       // Test behavior
       const result = await prisma.team.findUnique({
@@ -94,58 +127,58 @@ describe("Feature Integration Tests", () => {
 
 ### Best Practices
 
-1. **Use Helper Functions**: Always use `createTestUser`, `createTestTeam`, etc. to create test data. These functions use unique identifiers to avoid conflicts.
-
-2. **No beforeAll/afterAll Needed**: Since the setup file handles cleanup after each test, you typically don't need `beforeAll`/`afterAll` hooks. Each test starts with a clean database state.
-
-3. **Test Isolation**: Rely on the `afterEach` cleanup in the setup file to clean up data created during tests. Don't manually clean up test data within individual tests unless necessary.
-
-4. **Unique Identifiers**: When creating test data manually (not using helper functions), always use unique identifiers with timestamps or random strings to avoid conflicts:
+1. **Use Unique Identifiers**: Always use unique identifiers with timestamps or random strings to avoid constraint violations:
    ```typescript
    osuUsername: `test_user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
    ```
 
-5. **Keep Tests Simple**: Each test should be self-contained and not depend on data from other tests. The afterEach cleanup ensures this.
+2. **No Manual Cleanup Needed**: The `beforeEach` hook automatically cleans up all test data before each test runs, so you don't need to manually clean up within tests.
+
+3. **Test Isolation**: Each test starts with a completely clean database state. Don't depend on data from previous tests.
+
+4. **Direct Prisma Usage**: Use Prisma client directly for all database operations. The transaction-based reset handles all cleanup automatically.
+
+5. **Keep Tests Simple**: Each test should be self-contained and create all the data it needs.
 
 ## Database Schema Considerations
 
 The integration tests work with the actual database schema. Be aware of:
 
-- **Foreign Key Constraints**: The cleanup function deletes data in reverse dependency order (delete child records before parent records) to avoid constraint violations
-- **Unique Constraints**: Helper functions use unique identifiers to avoid constraint violations
-- **Database State**: The `afterEach` cleanup ensures tests start with a clean state by deleting all test data
+- **Foreign Key Constraints**: The transaction-based reset handles these automatically by deleting in the correct order
+- **Unique Constraints**: Use unique identifiers in your test data to avoid constraint violations
+- **Database State**: The `beforeEach` transaction ensures tests start with a clean state
 
 ## Troubleshooting
 
 ### Tests Fail with Foreign Key Constraint Violations
 
-If you see errors like "Foreign key constraint violated", ensure you're:
-1. Not manually deleting data in the wrong order
-2. Using the helper functions which handle this automatically
-3. Not leaving orphaned records in cleanup hooks
+This should not happen with the new transaction-based approach. If you see these errors:
+1. Ensure you're not manually creating data with conflicting foreign keys
+2. Check that the reset helper is being called before each test
+3. Verify the database migrations are up to date
 
 ### Tests Fail with Unique Constraint Violations
 
 If you see errors about duplicate keys, ensure you're:
-1. Using unique identifiers for test data
-2. Not creating the same data multiple times without cleanup
-3. Using the helper functions which include unique identifiers
+1. Using unique identifiers for test data (timestamps, random strings)
+2. Not reusing the same test data across multiple tests
+3. Letting the `beforeEach` cleanup handle data reset
 
 ### Tests Fail Because Data is Missing
 
 If tests fail because expected data is missing, ensure you're:
-1. Creating data within the test (not relying on data from previous tests)
-2. Not accidentally deleting data in cleanup hooks
-3. Using the single-fork configuration to avoid race conditions
+1. Creating all necessary data within each test
+2. Not depending on data from previous tests
+3. Using the correct field names and relationships
 
 ## Future Improvements
 
-Potential improvements to the integration testing setup:
+The current implementation already addresses several key improvements:
 
-1. **Transaction Rollback**: Instead of deleting data after each test, use database transactions that are rolled back after each test. This would be faster and more reliable than manual cleanup.
+✅ **Transaction-based cleanup**: Implemented using Prisma transactions for atomic and reliable data cleanup
 
-2. **Test Database**: Use a separate test database instead of the main database to avoid any risk of affecting production data.
+**Potential additional improvements**:
 
-3. **Data Seeding**: Create a consistent set of seed data for tests that can be reset between test runs.
-
-4. **Parallel Execution**: Configure tests to run in parallel with proper isolation (using transactions or separate databases per worker).
+1. **Test Database**: Use a separate test database instead of the main database to avoid any risk of affecting production data
+2. **Data Seeding**: Create a consistent set of seed data for tests that can be reset between test runs
+3. **Parallel Execution**: Configure tests to run in parallel with proper isolation (using separate databases per worker)
