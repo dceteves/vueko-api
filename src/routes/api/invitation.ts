@@ -1,14 +1,15 @@
 import { Router } from "express";
 
-import InvitationRequestHandler from "../../handlers/service/invitation.ts";
+import InvitationHandler from "../../handlers/service/invitation.ts";
+import InvitationService from "../../services/invitation.ts";
 
-const invitationServiceRouter = Router();
+export function createInvitationRoutes(service?: InvitationService) {
+  const handler = new InvitationHandler(service || new InvitationService());
+  const router = Router();
 
-invitationServiceRouter.post("/", InvitationRequestHandler.createInvitation);
-invitationServiceRouter.get("/me", InvitationRequestHandler.getInvitations);
-invitationServiceRouter.patch(
-  "/:invitationId/:action",
-  InvitationRequestHandler.updateInvitation,
-);
+  router.post("/", handler.createInvitation);
+  router.get("/me", handler.getInvitations);
+  router.patch("/:invitationId/:action", handler.updateInvitation);
 
-export default invitationServiceRouter;
+  return router;
+}

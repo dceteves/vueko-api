@@ -7,6 +7,8 @@ import type {
 } from "passport-oauth2";
 import type { OsuProfile } from "../types/passport.types.ts";
 
+const service = new UserService();
+
 const osuConfigOptions: StrategyOptions = {
   clientID: `${process.env.OSU_CLIENT_ID}`,
   clientSecret: `${process.env.OSU_CLIENT_SECRET}`,
@@ -25,7 +27,7 @@ const userProfileURL = "https://osu.ppy.sh/api/v2/me";
 const verifyOsuProfile = StrategyFactory.createVerifyFunction<OsuProfile>();
 const verifyOsuProfileWithRequest =
   StrategyFactory.createVerifyFunctionWithRequest<OsuProfile>(
-    UserService.linkOsuProfile,
+    service.linkOsuProfile,
   );
 const fetchOsuProfile =
   StrategyFactory.createProfileFunction<OsuProfile>(userProfileURL);

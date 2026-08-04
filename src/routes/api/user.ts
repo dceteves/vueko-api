@@ -1,11 +1,15 @@
 import { Router } from "express";
 
-import UserRequestHandler from "../../handlers/service/user.ts";
+import UserHandler from "../../handlers/service/user.ts";
+import UserService from "../../services/user.ts";
 
-const userServiceRouter = Router();
+export function createUserRoutes(service?: UserService) {
+  const userHandler = new UserHandler(service || new UserService());
+  const router = Router();
 
-userServiceRouter.get("/me", UserRequestHandler.me);
-userServiceRouter.get("/:userId", UserRequestHandler.findUser);
-userServiceRouter.patch("/:userId/:timezone", UserRequestHandler.patchTimeZone);
+  router.get("/me", userHandler.me);
+  router.get("/:userId", userHandler.findUser);
+  router.patch("/:userId/:timezone", userHandler.patchTimeZone);
 
-export default userServiceRouter;
+  return router;
+}

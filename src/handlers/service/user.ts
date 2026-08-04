@@ -1,52 +1,51 @@
 import UserService from "../../services/user.ts";
 import type { UserRequest, UserResponse } from "../../types/handler.types.ts";
 
-function me(req: UserRequest, res: UserResponse) {
-  if (!req.user) {
-    res.json({ message: "User not authenticated or found" });
-  } else {
-    res.json(req.user);
-  }
-}
+export default class UserHandler {
+  private service: UserService;
 
-async function findUser(req: UserRequest, res: UserResponse) {
-  const user = await UserService.fetchUser(req.params.userId);
-
-  if (!user) {
-    res.json({ message: "User not found" });
-  } else {
-    res.json(user);
-  }
-}
-
-async function unlinkDiscordAccount(req: UserRequest, res: UserResponse) {
-  if (!req.user) {
-    res.json({ message: "user not found" });
-    return;
+  constructor(service?: UserService) {
+    this.service = service || new UserService();
   }
 
-  try {
-    const newUser = await UserService.dropDiscordCredentials(req.user.id); // User ensured via middleware
-    res.json(newUser);
-  } catch (err) {
-    res.status(401).json({ message: (err as Error).message });
+  me(req: UserRequest, res: UserResponse) {
+    if (!req.user) {
+      res.status(404).json({ message: "User not authenticated or found" });
+    } else {
+      res.json(req.user);
+    }
   }
-}
 
-async function patchTimeZone(req: UserRequest, res: UserResponse) {
-  try {
+  async findUser(req: UserRequest, res: UserResponse) {
+    const result = await this.service.findUser(req.params.userId);
+
+    if (result.ok) {
+      res.json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
+    }
+  }
+
+  async unlinkDiscordAccount(req: UserRequest, res: UserResponse) {
+    const result = await this.service.dropDiscordCredentials(req.user!.id); // User ensured via middleware
+
+    if (result.ok) {
+      res.json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
+    }
+  }
+
+  async patchTimeZone(req: UserRequest, res: UserResponse) {
     const { userId } = req.params;
     const { timezone } = req.body;
-    const newUser = await UserService.updateTimezone(userId, timezone);
-    res.json(newUser);
-  } catch (err) {
-    res.status(401).json({ message: (err as Error).message });
+
+    const result = await this.service.updateTimezone(userId, timezone);
+
+    if (result.ok) {
+      res.json(result.value);
+    } else {
+      res.status(404).json({ message: result.error.message });
+    }
   }
 }
-
-export default {
-  me,
-  findUser,
-  unlinkDiscordAccount,
-  patchTimeZone,
-};

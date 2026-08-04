@@ -3,37 +3,42 @@ import UserService from "../services/user.ts";
 
 import type { Request } from "express";
 import type { User } from "../generated/prisma/client.ts";
+import type { Result } from "./result.ts";
+import { UserNotFoundError } from "./error.ts";
+import type { Profile } from "passport";
 
 type ProfileFunction<TProfile> = (
   accessToken: string,
   done: (err?: unknown, profile?: TProfile) => void,
 ) => void;
 
+const service = new UserService();
+
 function createVerifyFunction<
-  TProfile,
->(): OAuth2Strategy.VerifyFunction<TProfile> {
-  const verify = async (
+  T extends Profile,
+>(): OAuth2Strategy.VerifyFunction<T> {
+  return async (
     accessToken: string,
     refreshToken: string,
-    profile: TProfile,
+    profile: T,
     done: OAuth2Strategy.VerifyCallback,
   ) => {
-    try {
-      const user = await UserService.findOrCreateUserFromProfile<TProfile>(
-        accessToken,
-        refreshToken,
-        profile,
-      );
-      done(null, user);
-    } catch (err) {
-      done(err as Error);
+    const result = await service.userFromProfile(
+      accessToken,
+      refreshToken,
+      profile,
+    );
+
+    if (result.ok) {
+      done(null, result.value);
+    } else {
+      done(result.error);
     }
   };
-  return verify;
 }
 
 function createVerifyFunctionWithRequest<TProfile>(
-  linkFunction: (userId: string, profile: TProfile) => Promise<User>,
+  linkFunction: (userId: string, profile: TProfile) => Promise<Result<User>>,
 ): OAuth2Strategy.VerifyFunctionWithRequest<TProfile> {
   return async function (
     req: Request,
@@ -43,13 +48,16 @@ function createVerifyFunctionWithRequest<TProfile>(
     done: OAuth2Strategy.VerifyCallback,
   ) {
     if (!req.user) {
-      return done(new Error("User not found"));
+      done(new UserNotFoundError());
+      return;
     }
-    try {
-      const user = await linkFunction(req.user.id, profile);
-      done(null, user);
-    } catch (err) {
-      done(err as Error);
+
+    const result = await linkFunction(req.user.id, profile);
+
+    if (result.ok) {
+      done(null, result.value);
+    } else {
+      done(result.error);
     }
   };
 }

@@ -7,6 +7,8 @@ import type {
   StrategyOptionsWithRequest,
 } from "passport-oauth2";
 
+const service = new UserService();
+
 const userProfileURL = "https://discord.com/api/v10/users/@me";
 
 const discordStrategyOptions: StrategyOptions = {
@@ -30,7 +32,7 @@ const verifyDiscordProfile =
 
 const verifyDiscordProfileWithRequest =
   StrategyFactory.createVerifyFunctionWithRequest<DiscordProfile>(
-    UserService.linkDiscordProfile,
+    service.linkDiscordProfile,
   );
 
 const DiscordStrategy = StrategyFactory.createOAuth2Strategy(
