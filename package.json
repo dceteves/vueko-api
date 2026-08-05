@@ -9,7 +9,10 @@
     "test:integration": "vitest run --config vitest.integration.config.ts --no-file-parallelism",
     "test:watch": "vitest",
     "start": "node index.ts",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon index.ts",
+    "admin:dev": "cd admin && npm run dev",
+    "admin:build": "cd admin && npm run build",
+    "admin:preview": "cd admin && npm run preview"
   },
   "keywords": [],
   "author": "",

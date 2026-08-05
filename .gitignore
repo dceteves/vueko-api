@@ -4,3 +4,9 @@ node_modules
 src/generated/
 
 scripts
+
+admin/node_modules
+admin/dist
+admin/.env
+admin/.env.local
+!admin/.env.example
