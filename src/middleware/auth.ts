@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { NextFunction, Request, Response } from "express";
 import AdminService from "../services/admin.ts";
 
@@ -22,7 +24,7 @@ async function ensureAdmin(req: Request, res: Response, next: NextFunction) {
   }
 
   const isAdminResult = await adminService.isAdmin(userId);
-  
+
   if (isAdminResult.ok && isAdminResult.value) {
     next();
   } else {

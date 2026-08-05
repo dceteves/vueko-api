@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { User, Team, Invitation, ApiResponse } from "../types";
+import type { User, Team, Invitation } from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -98,17 +98,15 @@ export const authApi = {
       const response = await api.get<User>("/api/users/me");
       return { authenticated: true, user: response.data };
     } catch (error) {
-      return { authenticated: false, user: null };
+      return { authenticated: false, user: null, error };
     }
   },
 
   checkAdmin: async () => {
-    try {
-      const response = await api.get<{ isAdmin: boolean }>("/api/admin/check");
-      return response.data.isAdmin;
-    } catch (error) {
-      return false;
-    }
+    const response = await api
+      .get<{ isAdmin: boolean }>("/api/admin/check")
+      .catch(() => ({ data: { isAdmin: false } }));
+    return response.data.isAdmin;
   },
 };
 

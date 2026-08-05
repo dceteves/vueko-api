@@ -30,6 +30,10 @@ export default class AdminHandler {
     const { userId } = req.params;
     const createdBy = (req.user as any)?.id;
 
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
+
     const result = await this.service.addAdmin(userId, createdBy);
 
     if (result.ok) {
@@ -41,6 +45,10 @@ export default class AdminHandler {
 
   async removeAdmin(req: AdminRequest, res: AdminResponse) {
     const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
 
     const result = await this.service.removeAdmin(userId);
 
@@ -63,6 +71,10 @@ export default class AdminHandler {
 
   async getAdminByUserId(req: AdminRequest, res: AdminResponse) {
     const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
 
     const result = await this.service.getAdminByUserId(userId);
 

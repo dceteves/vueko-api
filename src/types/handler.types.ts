@@ -53,7 +53,7 @@ export type InvitationRequest = Request<
 >;
 export type InvitationResponse = Response<InvitationResBody>;
 
-export type AdminParams = UserIdParams;
+export type AdminParams = Partial<UserIdParams>;
 export type AdminReqBody = MessageBody | Admin | Admin[] | { isAdmin: boolean };
 export type AdminRequest = Request<AdminParams, null, AdminReqBody>;
 export type AdminResponse = Response<AdminReqBody>;
