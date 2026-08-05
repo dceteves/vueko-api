@@ -38,4 +38,7 @@ model User {
   // Relationship to Invitations
   sentInvites     Invitation[] @relation("Sender")
   receivedInvites Invitation[] @relation("Recipient")
+
+  // Relationship to Admin
+  adminRole Admin? @relation("AdminRole")
 }

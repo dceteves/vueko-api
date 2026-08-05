@@ -1,5 +1,10 @@
 import type { Request, Response } from "express";
-import type { Team, User, Invitation } from "../generated/prisma/client.ts";
+import type {
+  Team,
+  User,
+  Invitation,
+  Admin,
+} from "../generated/prisma/client.ts";
 import type { InvitationAction } from "./invitation.types.ts";
 import type { Provider } from "./passport.types.ts";
 
@@ -47,3 +52,8 @@ export type InvitationRequest = Request<
   InvitationReqBody
 >;
 export type InvitationResponse = Response<InvitationResBody>;
+
+export type AdminParams = UserIdParams;
+export type AdminReqBody = MessageBody | Admin | Admin[] | { isAdmin: boolean };
+export type AdminRequest = Request<AdminParams, null, AdminReqBody>;
+export type AdminResponse = Response<AdminReqBody>;

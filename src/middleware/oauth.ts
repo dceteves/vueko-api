@@ -22,12 +22,32 @@ function handleProviderCallback(
   res: ProviderResponse,
   next: NextFunction,
 ) {
+  const { provider } = req.params;
+
   if (req.query.state !== state) {
     res
       .status(400)
       .json({ message: "State does not match with callback state" });
   } else {
-    next();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    passport.authenticate(provider, (err: any, user: any) => {
+      if (err) {
+        console.log("handleProviderCallback error: ", err);
+        res.redirect(`${process.env.CLIENT_HOST}/login?error=auth_failed`);
+      } else if (!user) {
+        res.redirect(`${process.env.CLIENT_HOST}/login?error=no_user`);
+      } else {
+        // Establish the session
+        req.logIn(user, (err) => {
+          if (err) {
+            console.log("Session establishment error: ", err);
+            res.redirect(`${process.env.CLIENT_HOST}/login?error=session_failed`);
+          } else {
+            next();
+          }
+        });
+      }
+    })(req, res, next);
   }
 }
 

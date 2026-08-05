@@ -24,3 +24,9 @@ export class InvitationNotFoundError extends ResourceNotFoundError {
     super("Invitation");
   }
 }
+
+export class AdminNotFoundError extends ResourceNotFoundError {
+  constructor() {
+    super("Admin");
+  }
+}
