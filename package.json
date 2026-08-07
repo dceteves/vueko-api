@@ -10,7 +10,7 @@
     "test:watch": "vitest",
     "start": "node index.ts",
     "dev": "nodemon index.ts",
-    "build:admin": "cd admin && VITE_API_URL=/ npm run build",
+    "build:admin": "cd admin && npm ci && VITE_API_URL=/ npm run build",
     "build": "npm run build:admin",
     "prestart": "npm run build",
     "dev:all": "concurrently \"npm run dev\" \"npm run admin:dev\"",
