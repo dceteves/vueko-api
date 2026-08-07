@@ -50,12 +50,16 @@ if (process.env.NODE_ENV === "production") {
   // SPA catch-all route - serve index.html for all non-API routes
   app.use(async (req, res) => {
     // Protect admin UI - only serve to authenticated admin users
-    if (!req.path.startsWith("/api") && !req.path.startsWith("/auth") && !req.path.startsWith("/logout")) {
+    if (
+      !req.path.startsWith("/api") &&
+      !req.path.startsWith("/auth") &&
+      !req.path.startsWith("/logout")
+    ) {
       if (!req.isAuthenticated()) {
         return res.status(401).send("Authentication required");
       }
 
-      const userId = (req.user as any)?.id;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).send("Invalid user session");
       }
@@ -74,8 +78,16 @@ if (process.env.NODE_ENV === "production") {
 } else {
   // In development, return 401 for non-API routes
   app.use((req, res) => {
-    if (!req.path.startsWith("/api") && !req.path.startsWith("/auth") && !req.path.startsWith("/logout")) {
-      res.status(401).send("Unauthorized - Use 'npm run admin:dev' for frontend development");
+    if (
+      !req.path.startsWith("/api") &&
+      !req.path.startsWith("/auth") &&
+      !req.path.startsWith("/logout")
+    ) {
+      res
+        .status(401)
+        .send(
+          "Unauthorized - Use 'npm run admin:dev' for frontend development",
+        );
     }
   });
 }
