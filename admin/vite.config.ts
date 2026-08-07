@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // In development, proxy API requests to backend
       '/auth': {
         target: 'http://localhost:3000',
         changeOrigin: true,
@@ -21,4 +22,6 @@ export default defineConfig({
       },
     },
   },
+  // In production, base path is root since served by Express
+  base: '/',
 })

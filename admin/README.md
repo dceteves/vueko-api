@@ -16,7 +16,11 @@ cp .env.example .env
 
 Edit `.env` to set your API URL:
 ```
+# Development
 VITE_API_URL=http://localhost:3000
+
+# Production (when served by Express)
+VITE_API_URL=/
 ```
 
 ## Development
@@ -33,17 +37,26 @@ npm run admin:dev
 
 The admin panel will be available at `http://localhost:5173`
 
+For full-stack development (backend + frontend), run from root:
+```bash
+npm run dev:all
+```
+
 ## Build
 
 Build for production:
 ```bash
+# First, update .env to use relative paths for production
+# Change VITE_API_URL from http://localhost:3000 to /
 npm run build
 ```
 
-Or from the root directory:
+Or from the root directory (recommended - handles VITE_API_URL automatically):
 ```bash
-npm run admin:build
+npm run build
 ```
+
+The built files will be in `dist/` and served by the Express backend in production.
 
 ## Features
 

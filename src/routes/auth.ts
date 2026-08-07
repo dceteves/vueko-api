@@ -11,8 +11,8 @@ authRouter.get(
   "/:provider/callback",
   OAuth2Middleware.handleProviderCallback,
   (_req, res) => {
-    // res.json({ message: "Auth success" });
-    res.redirect(`${process.env.CLIENT_HOST}`);
+    // Redirect to root after successful auth (same origin)
+    res.redirect("/");
   },
 );
 
