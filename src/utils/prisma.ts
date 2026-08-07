@@ -22,7 +22,7 @@ export function extractProfile(profile: unknown) {
 
 function extractOsuProfile(profile: OsuProfile) {
   return {
-    where: { osuId: profile.id },
+    where: { osuId: String(profile.id) },
     update: {
       osuUsername: profile.username || profile.displayName,
       osuAvatar: profile.avatar_url,

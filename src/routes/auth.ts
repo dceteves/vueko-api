@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { Router } from "express";
 import OAuth2Middleware from "../middleware/oauth.ts";
 
@@ -9,7 +11,8 @@ authRouter.get(
   "/:provider/callback",
   OAuth2Middleware.handleProviderCallback,
   (_req, res) => {
-    res.json({ message: "Auth success" });
+    // Redirect to root after successful auth (same origin)
+    res.redirect("/");
   },
 );
 

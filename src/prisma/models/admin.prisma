@@ -1,0 +1,8 @@
+model Admin {
+  userId    String   @id
+  createdAt DateTime @default(now())
+  createdBy String?
+
+  // Relationship to User
+  user User @relation("AdminRole", fields: [userId], references: [id], onDelete: Cascade)
+}

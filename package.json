@@ -9,7 +9,13 @@
     "test:integration": "vitest run --config vitest.integration.config.ts --no-file-parallelism",
     "test:watch": "vitest",
     "start": "node index.ts",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon index.ts",
+    "build:admin": "cd admin && VITE_API_URL=/ npm run build",
+    "build": "npm run build:admin",
+    "dev:all": "concurrently \"npm run dev\" \"npm run admin:dev\"",
+    "admin:dev": "cd admin && npm run dev",
+    "admin:preview": "cd admin && npm run preview",
+    "start:prod": "NODE_ENV=production node index.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +25,6 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "axios": "^1.13.2",
-    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
@@ -27,12 +32,10 @@
     "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-oauth2": "^1.8.0",
-    "path": "^0.12.7",
     "pg": "^8.21.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.18.2",
     "@types/helmet": "^0.0.48",
@@ -42,6 +45,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-oauth2": "^1.8.0",
     "@types/supertest": "^7.2.1",
+    "concurrently": "^10.0.4",
     "eslint": "^9.39.2",
     "globals": "^16.5.0",
     "jiti": "^2.6.1",

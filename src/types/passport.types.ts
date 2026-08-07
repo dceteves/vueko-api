@@ -28,14 +28,13 @@ export function isProfile(profile: unknown): profile is Profile {
 
 export function isOsuProfile(profile: unknown): profile is OsuProfile {
   return (
-    isProfile(profile) &&
+    // isProfile(profile) &&
+    typeof profile === "object" &&
+    profile !== null &&
     "avatar_url" in profile &&
     "country_code" in profile &&
-    "provider" in profile &&
     typeof profile.avatar_url === "string" &&
-    typeof profile.country_code === "string" &&
-    typeof profile.provider === "string" &&
-    (profile.provider as Provider) === "osu"
+    typeof profile.country_code === "string"
   );
 }
 
