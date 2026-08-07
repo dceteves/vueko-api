@@ -12,6 +12,7 @@
     "dev": "nodemon index.ts",
     "build:admin": "cd admin && VITE_API_URL=/ npm run build",
     "build": "npm run build:admin",
+    "prestart": "npm run build",
     "dev:all": "concurrently \"npm run dev\" \"npm run admin:dev\"",
     "admin:dev": "cd admin && npm run dev",
     "admin:preview": "cd admin && npm run preview",
