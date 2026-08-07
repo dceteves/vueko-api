@@ -11,7 +11,7 @@
     "start": "node index.ts",
     "dev": "nodemon index.ts",
     "build:admin": "cd admin && npm ci && VITE_API_URL=/ npm run build",
-    "build": "npm run build:admin",
+    "build": "npm ci && npm run build:admin",
     "prestart": "npm run build",
     "dev:all": "concurrently \"npm run dev\" \"npm run admin:dev\"",
     "admin:dev": "cd admin && npm run dev",
