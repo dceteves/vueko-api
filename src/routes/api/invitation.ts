@@ -7,9 +7,11 @@ export function createInvitationRoutes(service?: InvitationService) {
   const handler = new InvitationHandler(service || new InvitationService());
   const router = Router();
 
-  router.post("/", handler.createInvitation);
-  router.get("/me", handler.getInvitations);
-  router.patch("/:invitationId/:action", handler.updateInvitation);
+  router.post("/", (req, res) => handler.createInvitation(req, res));
+  router.get("/me", (req, res) => handler.getInvitations(req, res));
+  router.patch("/:invitationId/:action", (req, res) =>
+    handler.updateInvitation(req, res),
+  );
 
   return router;
 }
