@@ -7,9 +7,12 @@ export function createUserRoutes(service?: UserService) {
   const userHandler = new UserHandler(service || new UserService());
   const router = Router();
 
-  router.get("/me", userHandler.me);
-  router.get("/:userId", userHandler.findUser);
-  router.patch("/:userId/:timezone", userHandler.patchTimeZone);
+  router.get("/me", userHandler.me.bind(userHandler));
+  router.get("/:userId", userHandler.findUser.bind(userHandler));
+  router.patch(
+    "/:userId/:timezone",
+    userHandler.patchTimeZone.bind(userHandler),
+  );
 
   return router;
 }
