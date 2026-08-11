@@ -7,11 +7,11 @@ export function createTeamRoutes(service?: TeamService) {
   const handler = new TeamHandler(service || new TeamService());
   const router = Router();
 
-  router.post("/", (req, res) => handler.createTeam(req, res));
-  router.get("/", (req, res) => handler.getTeams(req, res));
-  router.get("/:teamId", (req, res) => handler.getTeam(req, res));
-  router.patch("/:teamId", (req, res) => handler.changeTeamName(req, res));
-  router.delete("/:teamId", (req, res) => handler.deleteTeam(req, res));
+  router.post("/", handler.createTeam.bind(handler));
+  router.get("/", handler.getTeams.bind(handler));
+  router.get("/:teamId", handler.getTeam.bind(handler));
+  router.patch("/:teamId", handler.changeTeamName.bind(handler));
+  router.delete("/:teamId", handler.deleteTeam.bind(handler));
 
   return router;
 }
